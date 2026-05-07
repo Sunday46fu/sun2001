@@ -1,24 +1,74 @@
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<script>
-  async function main() {
-    await liff.init({ liffId: "2009974431-rZ9Od5w1" });
-    
-    if (!liff.isLoggedIn()) {
-      liff.login();
-    } else {
-      const profile = await liff.getProfile();
-      const userId = profile.userId; // นี่คือ User ID (U...) ที่เราต้องการ
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE Message Sender</title>
+    <style>
+        body { font-family: 'Helvetica Neue', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f7f8fa; }
+        .card { background: white; padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; width: 350px; }
+        h2 { color: #333; margin-bottom: 1.5rem; }
+        input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        button { background-color: #06c755; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
+        button:hover { background-color: #05a346; }
+        #status { margin-top: 1rem; font-size: 13px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>LINE Sender</h2>
+        <input type="text" id="messageInput" placeholder="พิมพ์ข้อความที่นี่..." value="สวัสดีครับ!">
+        <button id="sendBtn">ส่งข้อความเข้า LINE</button>
+        <p id="status">กำลังเริ่มต้นระบบ...</p>
+    </div>
 
-      // ส่งข้อมูลไปที่ Netlify Function (ตัวอย่างในข้อถัดไป)
-      await fetch('/.netlify/functions/send-message', {
-        method: 'POST',
-        body: JSON.stringify({
-          userId: userId,
-          message: "สวัสดีจากหน้าเว็บ!"
-        })
-      });
-      alert("ส่งข้อความเรียบร้อย!");
-    }
-  }
-  main();
-</script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script>
+        const LIFF_ID = "2009974431-rZ9Od5w1";
+        const statusText = document.getElementById('status');
+        const sendBtn = document.getElementById('sendBtn');
+
+        async function initLiff() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    statusText.innerText = "พร้อมใช้งาน ✅";
+                }
+            } catch (err) {
+                statusText.innerText = "LIFF Error: " + err.message;
+            }
+        }
+
+        sendBtn.onclick = async () => {
+            const msg = document.getElementById('messageInput').value;
+            if (!msg) return alert("กรุณาพิมพ์ข้อความ");
+
+            statusText.innerText = "กำลังส่ง...";
+            try {
+                const profile = await liff.getProfile();
+                const response = await fetch('/.netlify/functions/send-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: profile.userId,
+                        message: msg
+                    })
+                });
+
+                if (response.ok) {
+                    statusText.innerText = "ส่งสำเร็จ! ลองเช็คใน LINE ดูครับ";
+                    statusText.style.color = "#06c755";
+                } else {
+                    statusText.innerText = "ส่งล้มเหลว!";
+                }
+            } catch (err) {
+                statusText.innerText = "Error: " + err.message;
+            }
+        };
+
+        initLiff();
+    </script>
+</body>
+</html>
