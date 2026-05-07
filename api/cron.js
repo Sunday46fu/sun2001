@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+เราต้องดึงข้อมูลจากะบบเช็กทุกนาทีมูลคนที่จองเวลานี้เป๊ะๆ default async function handler(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_KEY;
     const lineToken = process.env.LINE_TOKEN;
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     // ดึงข้อมูลคนที่จองเวลานี้เป๊ะๆ (สมมติระบบเช็กทุกนาที)
     // สำหรับระบบจริงอาจจะดึงช่วงเวลามาเช็ก แต่ผมเขียนให้ดูเป็นโครงสร้างก่อน
     
-    // (ในของจริง เราต้องดึงข้อมูลจาก Supabase แล้ว Loop ส่ง LINE)
+    // (ในของจริง เรเ้้าต้องดึงข้อมูลจาก Supabase แล้ว Loop ส่ง LINE)
     
     res.status(200).send('Cron Check Complete');
 }
