@@ -8,7 +8,7 @@ exports.handler = async (event) => {
     const body = JSON.parse(event.body);
     const userId = body.userId;
     const message = body.message;
-    const LINE_TOKEN = "LQNwHAxoHm4bMDXxl8qqDD0NnOdfjztKFDulaY2ExHn3bTQSr/A8jujYjHVM4XDpWwB/zN43ATmJSU8ne+vj+RqMTb1iq0qy94ldu60t/Cljv3D4FstkthEcbS0aSASwJxzOlBSW7VZEbQ78kPvGQQdB04t89/1O/w1cDnyilFU=";
+    const LINE_TOKEN = "s+HgTBHQNRqgSW/b/YCSjIuOoLvh9vRBG/KGfeSnR+e5lN3SBQQN4voLMr+3U9c1WwB/zN43ATmJSU8ne+vj+RqMTb1iq0qy94ldu60t/CnjuK06K7ypO/yMe7lMruApKgd3Zczjn6GmXYDgxu3tEQdB04t89/1O/w1cDnyilFU=";
     await axios.post(
       'https://api.line.me/v2/bot/message/push',
       {
