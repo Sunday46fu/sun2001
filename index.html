@@ -61,7 +61,7 @@
             btn.disabled = true;
 
             // ส่งข้อมูลไปที่ Vercel API ของเรา
-            const res = await fetch('/api/book', {
+            const res = await fetch('/.netlify/functions/book', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
