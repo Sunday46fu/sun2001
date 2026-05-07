@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองคิว VIP</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        input, select, button { margin: 10px 0; padding: 10px; width: 100%; font-size: 16px; }
+        button { background-color: #06C755; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2 id="statusMessage">กำลังเชื่อมต่อ LINE...</h2>
+    
+    <div id="bookingForm" style="display:none;">
+        <h3 id="userName"></h3>
+        <p>เลือกบริการ:</p>
+        <select id="package">
+            <option value="ล้างรถเทพ">ล้างรถเทพ</option>
+            <option value="เคลือบแก้ว">เคลือบแก้ว</option>
+        </select>
+        <p>เลือกเวลา (ระบบ 24 ชม.):</p>
+        <input type="datetime-local" id="bookingTime">
+        <button onclick="submitBooking()">ยืนยันการจอง</button>
+    </div>
+
+    <script>
+        // ใช้ LIFF ID ล่าสุดของพี่
+        const LIFF_ID = "2009974431-rZ9Od5w1";
+
+        async function main() {
+            try {
+                await liff.init({ liffId: LIFF_ID });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    const profile = await liff.getProfile();
+                    document.getElementById('statusMessage').style.display = 'none';
+                    document.getElementById('bookingForm').style.display = 'block';
+                    document.getElementById('userName').innerText = "คุณ: " + profile.displayName;
+                    
+                    // เก็บข้อมูลไว้รอส่ง
+                    window.userProfile = profile;
+                }
+            } catch (err) {
+                document.getElementById('statusMessage').innerText = "Error: " + err.message;
+            }
+        }
+        main();
+
+        async function submitBooking() {
+            const pkg = document.getElementById('package').value;
+            const time = document.getElementById('bookingTime').value;
+            
+            if(!time) { alert('กรุณาเลือกเวลาครับ'); return; }
+
+            const btn = document.querySelector('button');
+            btn.innerText = "กำลังบันทึก...";
+            btn.disabled = true;
+
+            // ส่งข้อมูลไปที่ Vercel API ของเรา
+            const res = await fetch('/api/book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: window.userProfile.userId,
+                    name: window.userProfile.displayName,
+                    package: pkg,
+                    bookTime: time
+                })
+            });
+
+            if (res.ok) {
+                alert('จองสำเร็จ! เช็กข้อความใน LINE ได้เลยครับ');
+                liff.closeWindow(); // ปิดหน้าเว็บอัตโนมัติ
+            } else {
+                alert('เกิดข้อผิดพลาด ลองใหม่อีกครั้ง');
+                btn.innerText = "ยืนยันการจอง";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
