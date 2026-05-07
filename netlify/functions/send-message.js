@@ -1,7 +1,6 @@
 const axios = require('axios');
 
 exports.handler = async (event) => {
-    // ป้องกันการเรียกใช้ด้วย GET
     if (event.httpMethod !== "POST") {
         return { statusCode: 405, body: "Method Not Allowed" };
     }
@@ -9,10 +8,9 @@ exports.handler = async (event) => {
     try {
         const { userId, message } = JSON.parse(event.body);
         
-        // --- วาง Token ของคุณตรงนี้ ---
         const LINE_TOKEN = "LQNwHAxoHm4bMDXxl8qqDD0NnOdfjztKFDulaY2ExHn3bTQSr/A8jujYjHVM4XDpWwB/zN43ATmJSU8ne+vj+RqMTb1iq0qy94ldu60t/Cljv3D4FstkthEcbS0aSASwJxzOlBSW7VZEbQ78kPvGQQdB04t89/1O/w1cDnyilFU=
 
-"; 
+";
 
         await axios.post('https://api.line.me/v2/bot/message/push', {
             to: userId,
@@ -20,7 +18,7 @@ exports.handler = async (event) => {
         }, {
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${LINE_TOKEN}`
+                'Authorization': 'Bearer ' + LINE_TOKEN
             }
         });
 
