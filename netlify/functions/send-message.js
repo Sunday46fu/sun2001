@@ -9,7 +9,8 @@ exports.handler = async (event) => {
     const userId = body.userId;
     const message = body.message;
     const LINE_TOKEN = "G2tV047Ye/9jN50ooyrY6QhRCXip8f0/WzaV965OuzbxAXvRzLJQOyurIKf8wYdBWwB/zN43ATmJSU8ne+vj+RqMTb1iq0qy94ldu60t/Cl/1Pf4r54/0GZriA9ZRZ1RQpwuxwHX5mAUYqvbXKDMIwdB04t89/1O/w1cDnyilFU=";
-    await axios.post(
+
+    const result = await axios.post(
       'https://api.line.me/v2/bot/message/push',
       {
         to: userId,
@@ -22,8 +23,13 @@ exports.handler = async (event) => {
         }
       }
     );
+
+    console.log("SUCCESS", result.data);
     return { statusCode: 200, body: JSON.stringify({ status: "ok" }) };
+
   } catch (err) {
+    console.log("ERROR STATUS", err.response?.status);
+    console.log("ERROR DATA", JSON.stringify(err.response?.data));
     return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
