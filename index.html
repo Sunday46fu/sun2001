@@ -13,43 +13,46 @@
     <style>
         body { font-family: 'Prompt', sans-serif; background: #0f172a; color: #f8fafc; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .brand-card.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); transform: translateY(-2px); }
-        .time-chip.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+        .brand-card { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
+        .brand-card.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); transform: translateY(-2px); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        .time-chip { transition: all 0.2s ease; }
+        .time-chip.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     </style>
 </head>
-<body class="min-h-screen p-4 pb-10">
+<body class="min-h-screen p-4 pb-10 flex items-center justify-center">
 
-    <div class="max-w-md mx-auto">
-        <div class="text-center my-8">
+    <div class="w-full max-w-md">
+        <div class="text-center mb-8">
             <h1 class="text-3xl font-600 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">จองคิวโชว์รูม</h1>
-            <p class="text-slate-400 text-sm mt-2">Realtime Booking System</p>
+            <p class="text-slate-400 text-sm mt-2">สัมผัสประสบการณ์ขับขี่ที่เหนือระดับ</p>
         </div>
 
         <div class="glass rounded-3xl p-6 shadow-2xl">
-            <label class="block text-blue-400 text-xs font-semibold mb-4 uppercase tracking-widest">เลือกแบรนด์รถยนต์</label>
+            <label class="block text-blue-400 text-xs font-semibold mb-4 uppercase tracking-widest">แบรนด์รถยนต์ที่สนใจ</label>
             <div class="grid grid-cols-3 gap-3 mb-8" id="brandGrid"></div>
 
             <div class="mb-8">
-                <label class="block text-blue-400 text-xs font-semibold mb-3 uppercase tracking-widest">วันที่นัดหมาย</label>
-                <input type="date" id="dateInput" class="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                <label class="block text-blue-400 text-xs font-semibold mb-3 uppercase tracking-widest">วันที่เข้าชม</label>
+                <input type="date" id="dateInput" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
             </div>
 
             <div class="mb-10">
-                <label class="block text-blue-400 text-xs font-semibold mb-4 uppercase tracking-widest">ช่วงเวลา</label>
+                <label class="block text-blue-400 text-xs font-semibold mb-4 uppercase tracking-widest">ช่วงเวลาที่สะดวก</label>
                 <div class="grid grid-cols-3 gap-2" id="timeGrid"></div>
             </div>
 
-            <button id="confirmBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-900/40 transition-all active:scale-95">
+            <button id="confirmBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-900/40 transition-all active:scale-95 disabled:opacity-50">
                 ยืนยันการนัดหมาย
             </button>
-            <p id="status" class="text-center mt-4 text-xs text-slate-500 tracking-wide"></p>
+            <p id="status" class="text-center mt-4 text-xs text-slate-500 tracking-wide font-light h-4"></p>
         </div>
     </div>
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <script>
-        // --- Firebase Config (จัดเต็มตามที่พี่ให้มา) ---
+        // --- 1. Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyAWUWpDnF5Yt7QQ0ULvsxSVJhV0ckGMfu8",
             authDomain: "chatcharin-af5e4.firebaseapp.com",
@@ -62,18 +65,18 @@
         };
         
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.database(); // ใช้ REALTIME DATABASE
+        const db = firebase.database();
 
         const brands = ["Toyota", "Honda", "BMW", "Benz", "BYD", "Tesla"];
         const times = ["09:00", "10:30", "13:00", "14:30", "16:00", "17:30"];
         let selectedBrand = "";
         let selectedTime = "";
 
-        // UI Generation
+        // --- 2. Dynamic UI Rendering ---
         const brandGrid = document.getElementById('brandGrid');
         brands.forEach(b => {
             const div = document.createElement('div');
-            div.className = "brand-card glass p-3 text-center rounded-xl cursor-pointer text-xs font-medium transition-all border border-transparent";
+            div.className = "brand-card glass p-3 text-center rounded-xl cursor-pointer text-xs font-medium";
             div.innerText = b;
             div.onclick = () => {
                 document.querySelectorAll('.brand-card').forEach(c => c.classList.remove('active'));
@@ -86,7 +89,7 @@
         const timeGrid = document.getElementById('timeGrid');
         times.forEach(t => {
             const div = document.createElement('div');
-            div.className = "time-chip border border-slate-700 p-2 text-center rounded-xl cursor-pointer text-xs transition-all";
+            div.className = "time-chip border border-slate-700 p-2 text-center rounded-xl cursor-pointer text-xs";
             div.innerText = t;
             div.onclick = () => {
                 document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('active'));
@@ -96,26 +99,37 @@
             timeGrid.appendChild(div);
         });
 
+        // --- 3. LIFF Initialization ---
         async function init() {
             try {
                 await liff.init({ liffId: "2010010460-avlyckMz" });
-                if (!liff.isLoggedIn()) liff.login();
-            } catch (e) { console.error("LIFF Error", e); }
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                }
+            } catch (e) {
+                document.getElementById('status').innerText = "LIFF Init Failed";
+            }
         }
         init();
 
+        // --- 4. Booking Logic ---
         document.getElementById('confirmBtn').onclick = async () => {
             const date = document.getElementById('dateInput').value;
             const statusText = document.getElementById('status');
+            const btn = document.getElementById('confirmBtn');
 
-            if (!selectedBrand || !selectedTime || !date) return alert("กรุณาเลือกข้อมูลให้ครบ");
+            if (!selectedBrand || !selectedTime || !date) {
+                return alert("⚠️ กรุณากรอกข้อมูลให้ครบถ้วนก่อนยืนยัน");
+            }
 
-            statusText.innerText = "กำลังบันทึกข้อมูล...";
+            // Lock UI
+            btn.disabled = true;
+            statusText.innerText = "⏳ กำลังบันทึกข้อมูลเข้าคลัง...";
             
             try {
                 const profile = await liff.getProfile();
                 
-                // บันทึกเข้า REALTIME DATABASE (.ref().push())
+                // [Step 1] บันทึกลง Realtime Database
                 const newBookingRef = db.ref('bookings').push();
                 await newBookingRef.set({
                     userId: profile.userId,
@@ -127,21 +141,32 @@
                     status: "pending"
                 });
 
-                // แจ้งเตือนผ่าน Netlify Function
-                await fetch('/.netlify/functions/send-message', {
+                statusText.innerText = "✅ บันทึกแล้ว! กำลังส่งสลิปยืนยัน...";
+
+                // [Step 2] ส่งข้อมูลไปที่ Netlify Function เพื่อส่ง Flex Message (สลิป)
+                const response = await fetch('/.netlify/functions/send-message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: profile.userId,
-                        message: `✅ จองคิวสำเร็จ!\nแบรนด์: ${selectedBrand}\nวันที่: ${date}\nเวลา: ${selectedTime} น.`
+                        brand: selectedBrand, // ส่งค่าไปให้ Function สร้างสลิป
+                        date: date,
+                        time: selectedTime
                     })
                 });
 
-                statusText.innerText = "บันทึกสำเร็จ! กำลังปิด...";
-                setTimeout(() => liff.closeWindow(), 2000);
+                if (response.ok) {
+                    statusText.innerText = "✨ จองสำเร็จ! ตรวจสอบสลิปในแชท";
+                    statusText.style.color = "#4ade80";
+                    setTimeout(() => liff.closeWindow(), 2000);
+                } else {
+                    throw new Error("Failed to send message");
+                }
+
             } catch (err) {
-                statusText.innerText = "Error: " + err.message;
-                console.error(err);
+                btn.disabled = false;
+                statusText.innerText = "❌ เกิดข้อผิดพลาด: " + err.message;
+                statusText.style.color = "#f87171";
             }
         };
     </script>
