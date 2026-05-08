@@ -6,6 +6,7 @@ exports.handler = async (event) => {
     try {
         const { userId, brand, date, time } = JSON.parse(event.body);
 
+        // Token ของพี่ (ตรวจสอบอีกครั้งว่าใน LINE Developers กด Issue มาใหม่ๆ หรือยัง)
         const LINE_TOKEN = "G2tV047Ye/9jN50ooyrY6QhRCXip8f0/WzaV965OuzbxAXvRzLJQOyurIKf8wYdBWwB/zN43ATmJSU8ne+vj+RqMTb1iq0qy94ldu60t/Cl/1Pf4r54/0GZriA9ZRZ1RQpwuxwHX5mAUYqvbXKDMIwdB04t89/1O/w1cDnyilFU=";
 
         // Generate booking reference
@@ -17,14 +18,11 @@ exports.handler = async (event) => {
             contents: {
                 type: "bubble",
                 size: "mega",
-
-                // ── HEADER ──────────────────────────────────────────────
                 header: {
                     type: "box",
                     layout: "vertical",
                     paddingAll: "0px",
                     contents: [
-                        // Dark top bar with brand name
                         {
                             type: "box",
                             layout: "vertical",
@@ -39,45 +37,22 @@ exports.handler = async (event) => {
                                 endColor: "#1A1A2E"
                             },
                             contents: [
-                                // Brand row
                                 {
                                     type: "box",
                                     layout: "horizontal",
                                     alignItems: "center",
                                     contents: [
-                                        {
-                                            type: "box",
-                                            layout: "vertical",
-                                            width: "3px",
-                                            height: "28px",
-                                            cornerRadius: "2px",
-                                            backgroundColor: "#C9A84C",
-                                            contents: []
-                                        },
+                                        { type: "box", layout: "vertical", width: "3px", height: "28px", cornerRadius: "2px", backgroundColor: "#C9A84C", contents: [] },
                                         {
                                             type: "box",
                                             layout: "vertical",
                                             paddingStart: "10px",
                                             flex: 1,
                                             contents: [
-                                                {
-                                                    type: "text",
-                                                    text: "ZIS CAR SERVICE",
-                                                    weight: "bold",
-                                                    size: "lg",
-                                                    color: "#FFFFFF",
-                                                    letterSpacing: "2px"
-                                                },
-                                                {
-                                                    type: "text",
-                                                    text: "Premium Auto Center",
-                                                    size: "xxs",
-                                                    color: "#C9A84C",
-                                                    margin: "xs"
-                                                }
+                                                { type: "text", text: "ZIS CAR SERVICE", weight: "bold", size: "lg", color: "#FFFFFF", letterSpacing: "2px" },
+                                                { type: "text", text: "Premium Auto Center", size: "xxs", color: "#C9A84C", margin: "xs" }
                                             ]
                                         },
-                                        // Badge confirmed
                                         {
                                             type: "box",
                                             layout: "vertical",
@@ -88,62 +63,32 @@ exports.handler = async (event) => {
                                             cornerRadius: "20px",
                                             backgroundColor: "#C9A84C",
                                             contents: [
-                                                {
-                                                    type: "text",
-                                                    text: "✓ ยืนยันแล้ว",
-                                                    size: "xxs",
-                                                    color: "#0A0A0A",
-                                                    weight: "bold"
-                                                }
+                                                { type: "text", text: "✓ ยืนยันแล้ว", size: "xxs", color: "#0A0A0A", weight: "bold" }
                                             ]
                                         }
                                     ]
                                 },
-                                // Divider line gold
-                                {
-                                    type: "box",
-                                    layout: "vertical",
-                                    height: "1px",
-                                    backgroundColor: "#C9A84C",
-                                    margin: "md",
-                                    opacity: "0.4",
-                                    contents: []
-                                },
-                                // Booking reference
+                                { type: "box", layout: "vertical", height: "1px", backgroundColor: "#C9A84C", margin: "md", opacity: "0.4", contents: [] },
                                 {
                                     type: "box",
                                     layout: "horizontal",
                                     margin: "sm",
                                     alignItems: "center",
                                     contents: [
-                                        {
-                                            type: "text",
-                                            text: "เลขที่การจอง",
-                                            size: "xxs",
-                                            color: "#888888"
-                                        },
-                                        {
-                                            type: "text",
-                                            text: bookingRef,
-                                            size: "xxs",
-                                            color: "#C9A84C",
-                                            weight: "bold",
-                                            align: "end"
-                                        }
+                                        { type: "text", text: "เลขที่การจอง", size: "xxs", color: "#888888" },
+                                        { type: "text", text: bookingRef, size: "xxs", color: "#C9A84C", weight: "bold", align: "end", flex: 1 }
                                     ]
                                 }
                             ]
                         }
                     ]
                 },
-
-                // ── BODY ─────────────────────────────────────────────────
                 body: {
                     type: "box",
                     layout: "vertical",
                     paddingAll: "0px",
+                    backgroundColor: "#FAFAFA",
                     contents: [
-                        // White section
                         {
                             type: "box",
                             layout: "vertical",
@@ -151,189 +96,70 @@ exports.handler = async (event) => {
                             paddingBottom: "6px",
                             paddingStart: "22px",
                             paddingEnd: "22px",
-                            backgroundColor: "#FAFAFA",
                             contents: [
-                                // Section label
-                                {
-                                    type: "text",
-                                    text: "รายละเอียดการนัดหมาย",
-                                    size: "xxs",
-                                    color: "#999999",
-                                    weight: "bold",
-                                    letterSpacing: "1px"
-                                },
-
-                                // ── Row: Brand ──
+                                { type: "text", text: "รายละเอียดการนัดหมาย", size: "xxs", color: "#999999", weight: "bold", letterSpacing: "1px" },
                                 {
                                     type: "box",
                                     layout: "horizontal",
                                     margin: "lg",
                                     alignItems: "center",
                                     contents: [
-                                        // Icon circle
-                                        {
-                                            type: "box",
-                                            layout: "vertical",
-                                            width: "36px",
-                                            height: "36px",
-                                            cornerRadius: "18px",
-                                            backgroundColor: "#F0E6CC",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            contents: [
-                                                {
-                                                    type: "text",
-                                                    text: "🚗",
-                                                    size: "sm",
-                                                    align: "center"
-                                                }
-                                            ]
-                                        },
-                                        // Label + Value
+                                        { type: "box", layout: "vertical", width: "36px", height: "36px", cornerRadius: "18px", backgroundColor: "#F0E6CC", justifyContent: "center", alignItems: "center", contents: [{ type: "text", text: "🚗", size: "sm", align: "center" }] },
                                         {
                                             type: "box",
                                             layout: "vertical",
                                             paddingStart: "14px",
                                             flex: 1,
                                             contents: [
-                                                {
-                                                    type: "text",
-                                                    text: "แบรนด์รถยนต์",
-                                                    size: "xxs",
-                                                    color: "#999999"
-                                                },
-                                                {
-                                                    type: "text",
-                                                    text: brand,
-                                                    size: "md",
-                                                    color: "#1A1A2E",
-                                                    weight: "bold",
-                                                    margin: "xs"
-                                                }
+                                                { type: "text", text: "แบรนด์รถยนต์", size: "xxs", color: "#999999" },
+                                                { type: "text", text: brand || "N/A", size: "md", color: "#1A1A2E", weight: "bold", margin: "xs" }
                                             ]
                                         }
                                     ]
                                 },
-
-                                // Thin divider
-                                {
-                                    type: "separator",
-                                    margin: "lg",
-                                    color: "#EEEEEE"
-                                },
-
-                                // ── Row: Date ──
+                                { type: "separator", margin: "lg", color: "#EEEEEE" },
                                 {
                                     type: "box",
                                     layout: "horizontal",
                                     margin: "lg",
                                     alignItems: "center",
                                     contents: [
-                                        {
-                                            type: "box",
-                                            layout: "vertical",
-                                            width: "36px",
-                                            height: "36px",
-                                            cornerRadius: "18px",
-                                            backgroundColor: "#F0E6CC",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            contents: [
-                                                {
-                                                    type: "text",
-                                                    text: "📅",
-                                                    size: "sm",
-                                                    align: "center"
-                                                }
-                                            ]
-                                        },
+                                        { type: "box", layout: "vertical", width: "36px", height: "36px", cornerRadius: "18px", backgroundColor: "#F0E6CC", justifyContent: "center", alignItems: "center", contents: [{ type: "text", text: "📅", size: "sm", align: "center" }] },
                                         {
                                             type: "box",
                                             layout: "vertical",
                                             paddingStart: "14px",
                                             flex: 1,
                                             contents: [
-                                                {
-                                                    type: "text",
-                                                    text: "วันที่นัดหมาย",
-                                                    size: "xxs",
-                                                    color: "#999999"
-                                                },
-                                                {
-                                                    type: "text",
-                                                    text: date,
-                                                    size: "md",
-                                                    color: "#1A1A2E",
-                                                    weight: "bold",
-                                                    margin: "xs"
-                                                }
+                                                { type: "text", text: "วันที่นัดหมาย", size: "xxs", color: "#999999" },
+                                                { type: "text", text: date || "N/A", size: "md", color: "#1A1A2E", weight: "bold", margin: "xs" }
                                             ]
                                         }
                                     ]
                                 },
-
-                                // Thin divider
-                                {
-                                    type: "separator",
-                                    margin: "lg",
-                                    color: "#EEEEEE"
-                                },
-
-                                // ── Row: Time ──
+                                { type: "separator", margin: "lg", color: "#EEEEEE" },
                                 {
                                     type: "box",
                                     layout: "horizontal",
                                     margin: "lg",
                                     alignItems: "center",
                                     contents: [
-                                        {
-                                            type: "box",
-                                            layout: "vertical",
-                                            width: "36px",
-                                            height: "36px",
-                                            cornerRadius: "18px",
-                                            backgroundColor: "#F0E6CC",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            contents: [
-                                                {
-                                                    type: "text",
-                                                    text: "🕐",
-                                                    size: "sm",
-                                                    align: "center"
-                                                }
-                                            ]
-                                        },
+                                        { type: "box", layout: "vertical", width: "36px", height: "36px", cornerRadius: "18px", backgroundColor: "#F0E6CC", justifyContent: "center", alignItems: "center", contents: [{ type: "text", text: "🕐", size: "sm", align: "center" }] },
                                         {
                                             type: "box",
                                             layout: "vertical",
                                             paddingStart: "14px",
                                             flex: 1,
                                             contents: [
-                                                {
-                                                    type: "text",
-                                                    text: "เวลานัดหมาย",
-                                                    size: "xxs",
-                                                    color: "#999999"
-                                                },
-                                                {
-                                                    type: "text",
-                                                    text: time + " น.",
-                                                    size: "md",
-                                                    color: "#1A1A2E",
-                                                    weight: "bold",
-                                                    margin: "xs"
-                                                }
+                                                { type: "text", text: "เวลานัดหมาย", size: "xxs", color: "#999999" },
+                                                { type: "text", text: (time || "N/A") + " น.", size: "md", color: "#1A1A2E", weight: "bold", margin: "xs" }
                                             ]
                                         }
                                     ]
                                 },
-
                                 { type: "box", layout: "vertical", height: "16px", contents: [] }
                             ]
                         },
-
-                        // ── Notice bar (gold) ─────────────────────────────
                         {
                             type: "box",
                             layout: "horizontal",
@@ -344,26 +170,12 @@ exports.handler = async (event) => {
                             backgroundColor: "#FDF8EC",
                             alignItems: "center",
                             contents: [
-                                {
-                                    type: "text",
-                                    text: "⚠️",
-                                    size: "sm",
-                                    flex: 0
-                                },
-                                {
-                                    type: "text",
-                                    text: "  กรุณามาถึงก่อนเวลานัด 15 นาที",
-                                    size: "xs",
-                                    color: "#8B6914",
-                                    flex: 1,
-                                    wrap: true
-                                }
+                                { type: "text", text: "⚠️", size: "sm", flex: 0 },
+                                { type: "text", text: "  กรุณามาถึงก่อนเวลานัด 15 นาที", size: "xs", color: "#8B6914", flex: 1, wrap: true }
                             ]
                         }
                     ]
                 },
-
-                // ── FOOTER ───────────────────────────────────────────────
                 footer: {
                     type: "box",
                     layout: "vertical",
@@ -389,52 +201,20 @@ exports.handler = async (event) => {
                                     alignItems: "center",
                                     justifyContent: "center",
                                     contents: [
-                                        {
-                                            type: "text",
-                                            text: "✦",
-                                            size: "xs",
-                                            color: "#C9A84C",
-                                            flex: 0
-                                        },
-                                        {
-                                            type: "text",
-                                            text: "  ขอบคุณที่ไว้วางใจ Zis Car Service  ",
-                                            size: "xs",
-                                            color: "#CCCCCC",
-                                            align: "center",
-                                            flex: 0
-                                        },
-                                        {
-                                            type: "text",
-                                            text: "✦",
-                                            size: "xs",
-                                            color: "#C9A84C",
-                                            flex: 0
-                                        }
+                                        { type: "text", text: "✦", size: "xs", color: "#C9A84C", flex: 0 },
+                                        { type: "text", text: "  ขอบคุณที่ไว้วางใจ Zis Car Service  ", size: "xs", color: "#CCCCCC", align: "center", flex: 0 },
+                                        { type: "text", text: "✦", size: "xs", color: "#C9A84C", flex: 0 }
                                     ]
                                 },
-                                {
-                                    type: "text",
-                                    text: "We care about your car.",
-                                    size: "xxs",
-                                    color: "#555555",
-                                    align: "center",
-                                    margin: "sm"
-                                }
+                                { type: "text", text: "We care about your car.", size: "xxs", color: "#555555", align: "center", margin: "sm" }
                             ]
                         }
                     ]
-                },
-
-                styles: {
-                    header: { backgroundColor: "#0A0A0A" },
-                    body: { backgroundColor: "#FAFAFA" },
-                    footer: { backgroundColor: "#0A0A0A" }
                 }
             }
         };
 
-        await axios.post('https://api.line.me/v2/bot/message/push', {
+        const response = await axios.post('https://api.line.me/v2/bot/message/push', {
             to: userId,
             messages: [flexMessage]
         }, {
@@ -449,9 +229,14 @@ exports.handler = async (event) => {
             body: JSON.stringify({ status: "Success", bookingRef })
         };
     } catch (error) {
+        // Log Error ให้พี่ไปเช็คใน Netlify
+        console.error("LINE API ERROR DETAILS:", error.response ? error.response.data : error.message);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: error.message })
+            body: JSON.stringify({ 
+                error: error.message,
+                details: error.response ? error.response.data : "Check logs" 
+            })
         };
     }
 };
