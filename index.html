@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZIS Car Service - Booking</title>
+    <title>Car Dealer Booking - Realtime</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
     
@@ -11,46 +11,48 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <style>
-        body { font-family: 'Prompt', sans-serif; background: #0a0a0a; color: #f8fafc; }
+        body { font-family: 'Prompt', sans-serif; background: #0f172a; color: #f8fafc; }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .brand-card { transition: all 0.3s ease; border: 1px solid rgba(201, 168, 76, 0.1); }
-        .brand-card.active { border-color: #C9A84C; background: rgba(201, 168, 76, 0.2); transform: translateY(-2px); box-shadow: 0 0 15px rgba(201, 168, 76, 0.3); }
-        .time-chip.active { background: #C9A84C; color: #0a0a0a; border-color: #C9A84C; font-weight: 600; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8) sepia(1) saturate(5) hue-rotate(10deg); }
+        .brand-card { transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.1); }
+        .brand-card.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.2); transform: translateY(-2px); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        .time-chip { transition: all 0.2s ease; }
+        .time-chip.active { background: #3b82f6; color: white; border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
     </style>
 </head>
-<body class="min-h-screen p-4 flex items-center justify-center">
+<body class="min-h-screen p-4 pb-10 flex items-center justify-center">
 
     <div class="w-full max-w-md">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-[#C9A84C] tracking-widest">ZIS CAR SERVICE</h1>
-            <p class="text-slate-500 text-xs mt-2 uppercase tracking-tighter">Premium Auto Experience</p>
+            <h1 class="text-3xl font-600 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">จองคิวโชว์รูม</h1>
+            <p class="text-slate-400 text-sm mt-2">สัมผัสประสบการณ์ขับขี่ที่เหนือระดับ</p>
         </div>
 
-        <div class="glass rounded-3xl p-6 shadow-2xl border-t-2 border-[#C9A84C]/30">
-            <label class="block text-[#C9A84C] text-[10px] font-semibold mb-4 uppercase tracking-[0.2em]">Select Brand</label>
+        <div class="glass rounded-3xl p-6 shadow-2xl">
+            <label class="block text-blue-400 text-xs font-semibold mb-4 uppercase tracking-widest">แบรนด์รถยนต์ที่สนใจ</label>
             <div class="grid grid-cols-3 gap-3 mb-8" id="brandGrid"></div>
 
             <div class="mb-8">
-                <label class="block text-[#C9A84C] text-[10px] font-semibold mb-3 uppercase tracking-[0.2em]">Appointment Date</label>
-                <input type="date" id="dateInput" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-white focus:ring-1 focus:ring-[#C9A84C] outline-none">
+                <label class="block text-blue-400 text-xs font-semibold mb-3 uppercase tracking-widest">วันที่เข้าชม</label>
+                <input type="date" id="dateInput" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all">
             </div>
 
             <div class="mb-10">
-                <label class="block text-[#C9A84C] text-[10px] font-semibold mb-4 uppercase tracking-[0.2em]">Preferred Time</label>
+                <label class="block text-blue-400 text-xs font-semibold mb-4 uppercase tracking-widest">ช่วงเวลาที่สะดวก</label>
                 <div class="grid grid-cols-3 gap-2" id="timeGrid"></div>
             </div>
 
-            <button id="confirmBtn" class="w-full bg-[#C9A84C] hover:bg-[#d4b96a] text-[#0a0a0a] py-4 rounded-2xl font-bold text-lg transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-yellow-900/20">
-                CONFIRM BOOKING
+            <button id="confirmBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-900/40 transition-all active:scale-95 disabled:opacity-50">
+                ยืนยันการนัดหมาย
             </button>
-            <p id="status" class="text-center mt-4 text-[10px] text-slate-500 tracking-widest h-4 uppercase"></p>
+            <p id="status" class="text-center mt-4 text-xs text-slate-500 tracking-wide font-light h-4"></p>
         </div>
     </div>
 
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
     <script>
+        // --- 1. Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyAWUWpDnF5Yt7QQ0ULvsxSVJhV0ckGMfu8",
             authDomain: "chatcharin-af5e4.firebaseapp.com",
@@ -70,10 +72,11 @@
         let selectedBrand = "";
         let selectedTime = "";
 
+        // --- 2. Dynamic UI Rendering ---
         const brandGrid = document.getElementById('brandGrid');
         brands.forEach(b => {
             const div = document.createElement('div');
-            div.className = "brand-card glass p-3 text-center rounded-xl cursor-pointer text-[11px] font-medium";
+            div.className = "brand-card glass p-3 text-center rounded-xl cursor-pointer text-xs font-medium";
             div.innerText = b;
             div.onclick = () => {
                 document.querySelectorAll('.brand-card').forEach(c => c.classList.remove('active'));
@@ -86,7 +89,7 @@
         const timeGrid = document.getElementById('timeGrid');
         times.forEach(t => {
             const div = document.createElement('div');
-            div.className = "time-chip border border-white/10 p-2 text-center rounded-xl cursor-pointer text-xs";
+            div.className = "time-chip border border-slate-700 p-2 text-center rounded-xl cursor-pointer text-xs";
             div.innerText = t;
             div.onclick = () => {
                 document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('active'));
@@ -96,62 +99,74 @@
             timeGrid.appendChild(div);
         });
 
+        // --- 3. LIFF Initialization ---
         async function init() {
             try {
                 await liff.init({ liffId: "2010010460-avlyckMz" });
-                if (!liff.isLoggedIn()) liff.login();
-            } catch (e) { console.error(e); }
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                }
+            } catch (e) {
+                document.getElementById('status').innerText = "LIFF Init Failed";
+            }
         }
         init();
 
+        // --- 4. Booking Logic ---
         document.getElementById('confirmBtn').onclick = async () => {
             const date = document.getElementById('dateInput').value;
             const statusText = document.getElementById('status');
             const btn = document.getElementById('confirmBtn');
 
-            if (!selectedBrand || !selectedTime || !date) return alert("Please complete all fields.");
+            if (!selectedBrand || !selectedTime || !date) {
+                return alert("⚠️ กรุณากรอกข้อมูลให้ครบถ้วนก่อนยืนยัน");
+            }
 
+            // Lock UI
             btn.disabled = true;
-            statusText.innerText = "Processing Your Request...";
+            statusText.innerText = "⏳ กำลังบันทึกข้อมูลเข้าคลัง...";
             
             try {
                 const profile = await liff.getProfile();
                 
-                // 1. บันทึกลง Database
-                await db.ref('bookings').push().set({
+                // [Step 1] บันทึกลง Realtime Database
+                const newBookingRef = db.ref('bookings').push();
+                await newBookingRef.set({
                     userId: profile.userId,
                     displayName: profile.displayName,
                     brand: selectedBrand,
                     date: date,
                     time: selectedTime,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                    timestamp: firebase.database.ServerValue.TIMESTAMP,
+                    status: "pending"
                 });
 
-                // 2. ส่งข้อมูลไปที่ Function (จุดสำคัญที่ต้องแก้)
+                statusText.innerText = "✅ บันทึกแล้ว! กำลังส่งสลิปยืนยัน...";
+
+                // [Step 2] ส่งข้อมูลไปที่ Netlify Function เพื่อส่ง Flex Message (สลิป)
                 const response = await fetch('/.netlify/functions/send-message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: profile.userId,
-                        brand: selectedBrand, // ต้องส่ง brand ไป
-                        date: date,          // ต้องส่ง date ไป
-                        time: selectedTime    // ต้องส่ง time ไป
+                        brand: selectedBrand, // ส่งค่าไปให้ Function สร้างสลิป
+                        date: date,
+                        time: selectedTime
                     })
                 });
 
                 if (response.ok) {
-                    statusText.innerText = "SUCCESS! CLOSING WINDOW...";
-                    statusText.style.color = "#C9A84C";
+                    statusText.innerText = "✨ จองสำเร็จ! ตรวจสอบสลิปในแชท";
+                    statusText.style.color = "#4ade80";
                     setTimeout(() => liff.closeWindow(), 2000);
                 } else {
-                    const errData = await response.json();
-                    throw new Error(errData.details?.message || "Send failed");
+                    throw new Error("Failed to send message");
                 }
 
             } catch (err) {
                 btn.disabled = false;
-                statusText.innerText = "ERROR: " + err.message;
-                console.error(err);
+                statusText.innerText = "❌ เกิดข้อผิดพลาด: " + err.message;
+                statusText.style.color = "#f87171";
             }
         };
     </script>
