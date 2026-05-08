@@ -3,72 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE Message Sender</title>
+    <title>Premium Car Booking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Helvetica Neue', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f7f8fa; }
-        .card { background: white; padding: 2.5rem; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; width: 350px; }
-        h2 { color: #333; margin-bottom: 1.5rem; }
-        input { width: 100%; padding: 12px; margin-bottom: 1rem; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        button { background-color: #06c755; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.3s; }
-        button:hover { background-color: #05a346; }
-        #status { margin-top: 1rem; font-size: 13px; color: #888; }
+        body { font-family: 'Prompt', sans-serif; background: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .brand-card.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); transform: scale(1.02); }
+        .time-chip.active { background: #3b82f6; color: white; border-color: #3b82f6; }
     </style>
 </head>
-<body>
-    <div class="card">
-        <h2>LINE Sender</h2>
-        <input type="text" id="messageInput" placeholder="พิมพ์ข้อความที่นี่..." value="สวัสดีครับ!">
-        <button id="sendBtn">ส่งข้อความเข้า LINE</button>
-        <p id="status">กำลังเริ่มต้นระบบ...</p>
+<body class="min-h-screen p-4">
+
+    <div class="max-w-md mx-auto">
+        <div class="text-center my-8">
+            <h1 class="text-3xl font-600 bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">จองคิวชมรถยนต์</h1>
+            <p class="text-slate-400 text-sm mt-2">สัมผัสประสบการณ์ระดับพรีเมียมก่อนใคร</p>
+        </div>
+
+        <div class="glass rounded-3xl p-6 shadow-2xl">
+            <label class="block text-blue-400 text-sm font-semibold mb-4 uppercase tracking-wider">เลือกแบรนด์รถยนต์</label>
+            <div class="grid grid-cols-3 gap-3 mb-8" id="brandGrid">
+                </div>
+
+            <div class="mb-8">
+                <label class="block text-blue-400 text-sm font-semibold mb-3 uppercase tracking-wider">เลือกวันนัดหมาย</label>
+                <input type="date" id="dateInput" class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl p-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="mb-10">
+                <label class="block text-blue-400 text-sm font-semibold mb-4 uppercase tracking-wider">เลือกช่วงเวลา</label>
+                <div class="grid grid-cols-3 gap-2" id="timeGrid">
+                    </div>
+            </div>
+
+            <button id="confirmBtn" class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 py-4 rounded-2xl font-bold text-lg shadow-lg shadow-blue-900/20 transition-all active:scale-95">
+                ยืนยันการจองคิว
+            </button>
+            <p id="status" class="text-center mt-4 text-xs text-slate-500"></p>
+        </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script>
-        const LIFF_ID = "2010010460-avlyckMz";
-        const statusText = document.getElementById('status');
-        const sendBtn = document.getElementById('sendBtn');
 
-        async function initLiff() {
+    <script>
+        // --- 1. Firebase Config (ใส่ค่าที่คุณให้มา) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWUWpDnF5Yt7QQ0ULvsxSVJhV0ckGMfu8",
+            authDomain: "chatcharin-af5e4.firebaseapp.com",
+            databaseURL: "https://chatcharin-af5e4-default-rtdb.firebaseio.com",
+            projectId: "chatcharin-af5e4",
+            storageBucket: "chatcharin-af5e4.firebasestorage.app",
+            messagingSenderId: "631954642041",
+            appId: "1:631954642041:web:586447ace8ad055ca3f0a8",
+            measurementId: "G-2GNPMEF6E4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // --- 2. Data Options ---
+        const brands = ["Toyota", "Honda", "BMW", "Benz", "BYD", "Tesla"];
+        const times = ["09:00", "10:30", "13:00", "14:30", "16:00", "17:30"];
+        let selectedBrand = "";
+        let selectedTime = "";
+
+        // UI Injection
+        const brandGrid = document.getElementById('brandGrid');
+        brands.forEach(b => {
+            const el = document.createElement('div');
+            el.className = "brand-card glass p-3 text-center rounded-xl cursor-pointer text-xs font-medium transition-all";
+            el.innerText = b;
+            el.onclick = () => {
+                document.querySelectorAll('.brand-card').forEach(c => c.classList.remove('active'));
+                el.classList.add('active');
+                selectedBrand = b;
+            };
+            brandGrid.appendChild(el);
+        });
+
+        const timeGrid = document.getElementById('timeGrid');
+        times.forEach(t => {
+            const el = document.createElement('div');
+            el.className = "time-chip border border-slate-700 p-2 text-center rounded-xl cursor-pointer text-xs transition-all";
+            el.innerText = t;
+            el.onclick = () => {
+                document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('active'));
+                el.classList.add('active');
+                selectedTime = t;
+            };
+            timeGrid.appendChild(el);
+        });
+
+        // --- 3. LIFF & Logic ---
+        const LIFF_ID = "2010010460-avlyckMz"; 
+
+        async function init() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    statusText.innerText = "พร้อมใช้งาน ✅";
-                }
-            } catch (err) {
-                statusText.innerText = "LIFF Error: " + err.message;
-            }
+                if (!liff.isLoggedIn()) liff.login();
+            } catch (e) { console.error(e); }
         }
+        init();
 
-        sendBtn.onclick = async () => {
-            const msg = document.getElementById('messageInput').value;
-            if (!msg) return alert("กรุณาพิมพ์ข้อความ");
+        document.getElementById('confirmBtn').onclick = async () => {
+            const date = document.getElementById('dateInput').value;
+            const statusText = document.getElementById('status');
 
-            statusText.innerText = "กำลังส่ง...";
+            if (!selectedBrand || !selectedTime || !date) return alert("กรุณาระบุข้อมูลให้ครบถ้วน");
+
+            statusText.innerText = "กำลังประมวลผล...";
+            
             try {
                 const profile = await liff.getProfile();
-                const response = await fetch('/.netlify/functions/send-message', {
+                
+                // บันทึกลง Firebase Firestore แบบเรียลไทม์
+                await db.collection("bookings").add({
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    brand: selectedBrand,
+                    date: date,
+                    time: selectedTime,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    reminded: false
+                });
+
+                // เรียก Netlify Function ส่งข้อความยืนยัน
+                await fetch('/.netlify/functions/booking-handler', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: profile.userId,
-                        message: msg
+                        brand: selectedBrand,
+                        date: date,
+                        time: selectedTime
                     })
                 });
 
-                if (response.ok) {
-                    statusText.innerText = "ส่งสำเร็จ! ลองเช็คใน LINE ดูครับ";
-                    statusText.style.color = "#06c755";
-                } else {
-                    statusText.innerText = "ส่งล้มเหลว!";
-                }
+                statusText.innerText = "จองคิวสำเร็จ! กำลังปิดหน้าต่าง...";
+                setTimeout(() => liff.closeWindow(), 2000);
             } catch (err) {
                 statusText.innerText = "Error: " + err.message;
             }
         };
-
-        initLiff();
     </script>
 </body>
 </html>
