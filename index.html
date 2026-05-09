@@ -2,20 +2,176 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE Bot Dashboard | Professional</title>
+    <!-- Tailwind CSS (UI & Layout) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome (Icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 (Popups) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
 </head>
-<body>
-    <div style="max-width: 400px; margin: auto; padding: 20px; border: 1px solid #ccc;">
-        <h3>ตั้งค่าคำตอบบอท</h3>
-        <input type="text" id="k" placeholder="ถ้าพิมพ์ว่า..." style="width:100%; margin-bottom:10px;">
-        <input type="text" id="r" placeholder="ให้ตอบว่า..." style="width:100%; margin-bottom:10px;">
-        <button onclick="save()" style="width:100%; background:#00b900; color:#fff; border:none; padding:10px;">บันทึก</button>
-        <div id="list" style="margin-top:20px;"></div>
-    </div>
+<body class="flex h-screen overflow-hidden text-gray-800">
+
+    <!-- Sidebar (Desktop & Mobile Nav) -->
+    <aside class="w-20 lg:w-64 bg-white border-r border-gray-200 flex flex-col justify-between transition-all duration-300 z-50">
+        <div>
+            <div class="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-gray-100">
+                <i class="fa-brands fa-line text-green-500 text-3xl"></i>
+                <span class="ml-3 font-semibold text-lg hidden lg:block">BotAdmin</span>
+            </div>
+            <nav class="p-2 lg:p-4 space-y-2 mt-4">
+                <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center justify-center lg:justify-start p-3 rounded-xl bg-green-50 text-green-600 transition hover:bg-gray-50" id="nav-dashboard">
+                    <i class="fa-solid fa-chart-pie text-xl lg:text-base w-6"></i>
+                    <span class="ml-3 font-medium hidden lg:block">ภาพรวม</span>
+                </button>
+                <button onclick="switchTab('rules')" class="nav-btn w-full flex items-center justify-center lg:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition" id="nav-rules">
+                    <i class="fa-solid fa-list text-xl lg:text-base w-6"></i>
+                    <span class="ml-3 font-medium hidden lg:block">จัดการคำสั่ง</span>
+                </button>
+                <button onclick="switchTab('settings')" class="nav-btn w-full flex items-center justify-center lg:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition" id="nav-settings">
+                    <i class="fa-solid fa-gear text-xl lg:text-base w-6"></i>
+                    <span class="ml-3 font-medium hidden lg:block">ตั้งค่าบอท</span>
+                </button>
+                <button onclick="switchTab('tester')" class="nav-btn w-full flex items-center justify-center lg:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition" id="nav-tester">
+                    <i class="fa-solid fa-robot text-xl lg:text-base w-6"></i>
+                    <span class="ml-3 font-medium hidden lg:block">ทดสอบบอท</span>
+                </button>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50/50">
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm sticky top-0 z-40">
+            <h1 class="text-xl font-semibold" id="page-title">ภาพรวมระบบ (Dashboard)</h1>
+        </header>
+
+        <div class="p-4 lg:p-8">
+            
+            <!-- Tab: Dashboard -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
+                        <div class="bg-blue-100 p-4 rounded-xl text-blue-500"><i class="fa-solid fa-book text-2xl"></i></div>
+                        <div class="ml-4">
+                            <p class="text-sm text-gray-500 font-medium">คำสั่งทั้งหมด</p>
+                            <h3 class="text-2xl font-bold" id="stat-total-rules">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="font-semibold text-lg mb-2">ยินดีต้อนรับสู่ระบบจัดการ</h3>
+                    <p class="text-gray-500 text-sm">เลื่อนไปที่เมนู "จัดการคำสั่ง" เพื่อเพิ่มคำคีย์เวิร์ดให้บอทของคุณได้เลยครับ</p>
+                </div>
+            </div>
+
+            <!-- Tab: Rules Management -->
+            <div id="tab-rules" class="tab-content">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h3 class="text-lg font-semibold">รายการคำสั่งตอบกลับ</h3>
+                    </div>
+                    
+                    <!-- Add Rule Form -->
+                    <div class="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-200">
+                        <h4 class="font-medium text-gray-700 mb-3"><i class="fa-solid fa-plus mr-2"></i>เพิ่มคำสั่งใหม่</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <input type="text" id="input-keyword" placeholder="คำคีย์เวิร์ด (เช่น สวัสดี)" class="p-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none w-full">
+                            <select id="input-type" class="p-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none w-full bg-white">
+                                <option value="exact">ตรงเป๊ะ (Exact)</option>
+                                <option value="contains">มีคำนี้ผสมอยู่ (Contains)</option>
+                            </select>
+                            <input type="text" id="input-response" placeholder="คำตอบของบอท..." class="p-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none w-full">
+                            <button onclick="addRule()" class="bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg p-2 transition shadow-md w-full">บันทึกคำสั่ง</button>
+                        </div>
+                    </div>
+
+                    <!-- Rules List -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 text-sm">
+                                    <th class="p-3 font-medium rounded-tl-lg">คีย์เวิร์ด</th>
+                                    <th class="p-3 font-medium">ประเภทการจับคู่</th>
+                                    <th class="p-3 font-medium">คำตอบ</th>
+                                    <th class="p-3 font-medium text-right rounded-tr-lg">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rules-table-body" class="text-sm">
+                                <!-- Rules will be rendered here -->
+                            </tbody>
+                        </table>
+                        <div id="no-rules-msg" class="text-center py-8 text-gray-400 hidden">ยังไม่มีคำสั่งใดๆ เพิ่มคำสั่งด้านบนได้เลย</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Settings -->
+            <div id="tab-settings" class="tab-content">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-2xl">
+                    <h3 class="text-lg font-semibold mb-6">ตั้งค่าบอททั่วไป</h3>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">ข้อความตอบกลับเริ่มต้น (Fallback Message)</label>
+                        <p class="text-xs text-gray-500 mb-2">บอทจะตอบข้อความนี้ เมื่อพิมพ์สิ่งที่ไม่ตรงกับคีย์เวิร์ดใดๆ เลย (ปล่อยว่างไว้หากไม่ต้องการให้บอทตอบ)</p>
+                        <textarea id="input-fallback" rows="3" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-400 outline-none resize-none" placeholder="เช่น ขออภัยค่ะ บอทยังไม่เข้าใจคำถาม..."></textarea>
+                    </div>
+                    
+                    <button onclick="saveSettings()" class="bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-xl px-6 py-2.5 transition shadow-md">บันทึกการตั้งค่า</button>
+                </div>
+            </div>
+
+            <!-- Tab: Tester -->
+            <div id="tab-tester" class="tab-content">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col max-w-md mx-auto h-[600px]">
+                    <div class="bg-slate-800 text-white p-4 rounded-t-2xl flex items-center">
+                        <i class="fa-solid fa-robot text-2xl mr-3"></i>
+                        <div>
+                            <h3 class="font-semibold">Bot Simulator</h3>
+                            <p class="text-xs text-slate-300">ทดสอบโดยไม่ต้องเปิด LINE</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Area -->
+                    <div id="chat-box" class="flex-1 p-4 overflow-y-auto bg-gray-100 flex flex-col gap-3">
+                        <div class="flex items-start gap-2">
+                            <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm border border-gray-200">
+                                ลองพิมพ์ทักทาย หรือ พิมพ์คีย์เวิร์ดที่คุณตั้งค่าไว้ดูสิ!
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Input Area -->
+                    <div class="p-3 bg-white border-t border-gray-200 rounded-b-2xl flex gap-2">
+                        <input type="text" id="chat-input" placeholder="พิมพ์ข้อความ..." class="flex-1 p-2 bg-gray-100 rounded-full px-4 outline-none focus:ring-2 focus:ring-slate-300 text-sm" onkeypress="if(event.key === 'Enter') simulateChat()">
+                        <button onclick="simulateChat()" class="bg-green-500 text-white h-10 w-10 rounded-full flex items-center justify-center hover:bg-green-600 transition">
+                            <i class="fa-solid fa-paper-plane text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
 
     <script>
+        // --- 1. การตั้งค่า Firebase ---
         const firebaseConfig = {
             apiKey: "AIzaSyAWUWpDnF5Yt7QQ0ULvsxSVJhV0ckGMfu8",
             authDomain: "chatcharin-af5e4.firebaseapp.com",
@@ -23,29 +179,186 @@
             projectId: "chatcharin-af5e4",
             storageBucket: "chatcharin-af5e4.firebasestorage.app",
             messagingSenderId: "631954642041",
-            appId: "1:631954642041:web:586447ace8ad055ca3f0a8",
-            measurementId: "G-2GNPMEF6E4"
+            appId: "1:631954642041:web:586447ace8ad055ca3f0a8"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        
+        // ตัวแปรเก็บข้อมูลสำหรับหน้าเว็บ
+        let botRules = {};
+        let botSettings = { fallback: "" };
 
-        function save() {
-            const k = document.getElementById('k').value;
-            const r = document.getElementById('r').value;
-            if(k && r) {
-                db.ref('bot_rules/' + k).set(r).then(() => {
-                    alert('บันทึกสำเร็จ');
-                    document.getElementById('k').value = '';
-                    document.getElementById('r').value = '';
+        // --- 2. ระบบ UI Navigation ---
+        const pageTitles = {
+            'dashboard': 'ภาพรวมระบบ (Dashboard)',
+            'rules': 'จัดการคำสั่ง (Rules Manager)',
+            'settings': 'ตั้งค่าบอท (Bot Settings)',
+            'tester': 'หน้าต่างทดสอบ (Simulator)'
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-green-50', 'text-green-600');
+                el.classList.add('text-gray-500');
+            });
+            let activeBtn = document.getElementById('nav-' + tabId);
+            activeBtn.classList.remove('text-gray-500');
+            activeBtn.classList.add('bg-green-50', 'text-green-600');
+            
+            document.getElementById('page-title').innerText = pageTitles[tabId];
+        }
+
+        // --- 3. ดึงข้อมูลจาก Firebase ทันทีแบบ Real-time ---
+        // ใช้ Path ใหม่ bot_data/rules และ bot_data/settings เพื่อโครงสร้างที่เป็นระเบียบ
+        db.ref('bot_data/rules').on('value', (snap) => {
+            botRules = snap.val() || {};
+            renderRules();
+            document.getElementById('stat-total-rules').innerText = Object.keys(botRules).length;
+        });
+
+        db.ref('bot_data/settings').on('value', (snap) => {
+            botSettings = snap.val() || { fallback: "" };
+            document.getElementById('input-fallback').value = botSettings.fallback || "";
+        });
+
+        // --- 4. ฟังก์ชันจัดการคำสั่ง (Rules CRUD) ---
+        function addRule() {
+            const k = document.getElementById('input-keyword').value.trim();
+            const type = document.getElementById('input-type').value;
+            const r = document.getElementById('input-response').value.trim();
+            
+            if(!k || !r) return Swal.fire('ข้อผิดพลาด', 'กรุณากรอกคีย์เวิร์ดและคำตอบให้ครบถ้วน', 'error');
+
+            const ruleId = 'rule_' + Date.now(); // สร้าง ID สุ่มป้องกันบัคตัวอักษรพิเศษ
+            
+            db.ref(`bot_data/rules/${ruleId}`).set({
+                keyword: k,
+                type: type,
+                response: r
+            }).then(() => {
+                Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1500 });
+                document.getElementById('input-keyword').value = '';
+                document.getElementById('input-response').value = '';
+            });
+        }
+
+        function deleteRule(id) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "หากลบแล้วจะไม่สามารถกู้คืนได้!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    db.ref(`bot_data/rules/${id}`).remove();
+                    Swal.fire({ icon: 'success', title: 'ลบเรียบร้อย', showConfirmButton: false, timer: 1000 });
+                }
+            });
+        }
+
+        function renderRules() {
+            const tbody = document.getElementById('rules-table-body');
+            const noMsg = document.getElementById('no-rules-msg');
+            tbody.innerHTML = '';
+            
+            const entries = Object.entries(botRules);
+            if(entries.length === 0) {
+                noMsg.classList.remove('hidden');
+            } else {
+                noMsg.classList.add('hidden');
+                entries.forEach(([id, data]) => {
+                    const badgeClass = data.type === 'exact' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
+                    const typeText = data.type === 'exact' ? 'ตรงเป๊ะ' : 'มีคำนี้ผสมอยู่';
+                    
+                    tbody.innerHTML += `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                            <td class="p-3 font-medium text-gray-800">${data.keyword}</td>
+                            <td class="p-3"><span class="px-2 py-1 text-xs rounded-md ${badgeClass}">${typeText}</span></td>
+                            <td class="p-3 text-gray-600 truncate max-w-[200px]" title="${data.response}">${data.response}</td>
+                            <td class="p-3 text-right">
+                                <button onclick="deleteRule('${id}')" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
                 });
             }
         }
 
-        db.ref('bot_rules').on('value', (snap) => {
-            let html = '<b>รายการคำสั่ง:</b><br>';
-            snap.forEach(c => { html += `<div>${c.key} -> ${c.val()}</div>`; });
-            document.getElementById('list').innerHTML = html;
-        });
+        // --- 5. ฟังก์ชันตั้งค่าบอท ---
+        function saveSettings() {
+            const fb = document.getElementById('input-fallback').value.trim();
+            db.ref('bot_data/settings/fallback').set(fb).then(() => {
+                Swal.fire({ icon: 'success', title: 'บันทึกการตั้งค่าสำเร็จ', showConfirmButton: false, timer: 1500 });
+            });
+        }
+
+        // --- 6. ฟังก์ชัน Simulator (หน้าทดสอบบอท) ---
+        function simulateChat() {
+            const inputEl = document.getElementById('chat-input');
+            const msg = inputEl.value.trim();
+            if(!msg) return;
+
+            appendChat('user', msg);
+            inputEl.value = '';
+
+            // จำลองการคิดของบอท
+            setTimeout(() => {
+                let reply = checkBotLogic(msg);
+                if(reply) appendChat('bot', reply);
+            }, 500);
+        }
+
+        function checkBotLogic(msg) {
+            let userMsgLower = msg.toLowerCase();
+            let exactMatch = null;
+            let containsMatch = null;
+
+            // วนลูปหาคำสั่งที่ตรงกัน
+            for (const key in botRules) {
+                let rule = botRules[key];
+                let keywordLower = rule.keyword.toLowerCase();
+                
+                if (rule.type === 'exact' && userMsgLower === keywordLower) {
+                    exactMatch = rule.response;
+                    break; // Exact match สำคัญสุด เจอแล้วหยุดเลย
+                }
+                if (rule.type === 'contains' && userMsgLower.includes(keywordLower)) {
+                    containsMatch = rule.response; 
+                }
+            }
+
+            if (exactMatch) return exactMatch;
+            if (containsMatch) return containsMatch;
+            if (botSettings.fallback) return botSettings.fallback;
+            return null; // ไม่มีตั้งค่าอะไรไว้เลย ก็ไม่ตอบ
+        }
+
+        function appendChat(sender, text) {
+            const box = document.getElementById('chat-box');
+            if(sender === 'user') {
+                box.innerHTML += `
+                    <div class="flex justify-end gap-2 animate-[fadeIn_0.2s_ease-in-out]">
+                        <div class="bg-green-500 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm text-sm max-w-[80%] break-words">
+                            ${text}
+                        </div>
+                    </div>`;
+            } else {
+                box.innerHTML += `
+                    <div class="flex items-start gap-2 animate-[fadeIn_0.2s_ease-in-out]">
+                        <div class="bg-white text-gray-800 border border-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm max-w-[80%] break-words">
+                            ${text}
+                        </div>
+                    </div>`;
+            }
+            box.scrollTop = box.scrollHeight;
+        }
     </script>
 </body>
 </html>
