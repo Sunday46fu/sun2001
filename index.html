@@ -3,175 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LINE Bot Dashboard | Professional</title>
-    <!-- Tailwind CSS (UI & Layout) -->
+    <title>Store Management Pro | ระบบจัดการร้านค้า</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome (Icons) -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SweetAlert2 (Popups) -->
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content, .modal { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
+        .modal.active { display: flex; animation: fadeIn 0.2s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ */
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* ระบบปริ้นใบปะหน้า */
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
+            .no-print { display: none !important; }
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden text-gray-800">
 
-    <!-- Sidebar (Desktop & Mobile Nav) -->
-    <aside class="w-20 lg:w-64 bg-white border-r border-gray-200 flex flex-col justify-between transition-all duration-300 z-50">
+    <!-- Sidebar -->
+    <aside class="w-16 md:w-64 bg-white border-r border-gray-200 flex flex-col justify-between transition-all duration-300 z-50 shadow-sm">
         <div>
-            <div class="h-16 flex items-center justify-center lg:justify-start lg:px-6 border-b border-gray-100">
-                <i class="fa-brands fa-line text-green-500 text-3xl"></i>
-                <span class="ml-3 font-semibold text-lg hidden lg:block">BotAdmin</span>
+            <div class="h-16 flex items-center justify-center md:justify-start md:px-6 border-b border-gray-100">
+                <div class="bg-blue-600 text-white p-1.5 rounded-lg"><i class="fa-solid fa-store text-xl"></i></div>
+                <span class="ml-3 font-bold text-lg hidden md:block text-slate-800">Store<span class="text-blue-600">Pro</span></span>
             </div>
-            <nav class="p-2 lg:p-4 space-y-2 mt-4">
-                <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center justify-center lg:justify-start p-3 rounded-xl bg-green-50 text-green-600 transition hover:bg-gray-50" id="nav-dashboard">
-                    <i class="fa-solid fa-chart-pie text-xl lg:text-base w-6"></i>
-                    <span class="ml-3 font-medium hidden lg:block">ภาพรวม</span>
+            <nav class="p-2 md:p-4 space-y-1 mt-2">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center justify-center md:justify-start p-3 rounded-xl bg-blue-50 text-blue-600 transition">
+                    <i class="fa-solid fa-chart-line text-xl md:text-base w-6"></i>
+                    <span class="ml-3 font-medium hidden md:block">ภาพรวม (Dashboard)</span>
                 </button>
-                <button onclick="switchTab('rules')" class="nav-btn w-full flex items-center justify-center lg:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition" id="nav-rules">
-                    <i class="fa-solid fa-list text-xl lg:text-base w-6"></i>
-                    <span class="ml-3 font-medium hidden lg:block">จัดการคำสั่ง</span>
+                <button onclick="switchTab('orders')" id="nav-orders" class="nav-btn w-full flex items-center justify-center md:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition">
+                    <i class="fa-solid fa-box-open text-xl md:text-base w-6"></i>
+                    <span class="ml-3 font-medium hidden md:block">ออเดอร์ (Orders)</span>
                 </button>
-                <button onclick="switchTab('settings')" class="nav-btn w-full flex items-center justify-center lg:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition" id="nav-settings">
-                    <i class="fa-solid fa-gear text-xl lg:text-base w-6"></i>
-                    <span class="ml-3 font-medium hidden lg:block">ตั้งค่าบอท</span>
-                </button>
-                <button onclick="switchTab('tester')" class="nav-btn w-full flex items-center justify-center lg:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition" id="nav-tester">
-                    <i class="fa-solid fa-robot text-xl lg:text-base w-6"></i>
-                    <span class="ml-3 font-medium hidden lg:block">ทดสอบบอท</span>
+                <button onclick="switchTab('products')" id="nav-products" class="nav-btn w-full flex items-center justify-center md:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition">
+                    <i class="fa-solid fa-tags text-xl md:text-base w-6"></i>
+                    <span class="ml-3 font-medium hidden md:block">สินค้า (Products)</span>
                 </button>
             </nav>
         </div>
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-y-auto bg-gray-50/50">
-        <!-- Header -->
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm sticky top-0 z-40">
-            <h1 class="text-xl font-semibold" id="page-title">ภาพรวมระบบ (Dashboard)</h1>
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto relative">
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm sticky top-0 z-40 justify-between">
+            <h1 class="text-xl font-semibold text-gray-800" id="page-title">ภาพรวมยอดขาย</h1>
+            <div class="flex items-center gap-3">
+                <span class="relative flex h-3 w-3">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span class="text-sm font-medium text-gray-500">ระบบออนไลน์</span>
+            </div>
         </header>
 
-        <div class="p-4 lg:p-8">
+        <div class="p-4 md:p-8 pb-20">
             
             <!-- Tab: Dashboard -->
             <div id="tab-dashboard" class="tab-content active">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center">
-                        <div class="bg-blue-100 p-4 rounded-xl text-blue-500"><i class="fa-solid fa-book text-2xl"></i></div>
-                        <div class="ml-4">
-                            <p class="text-sm text-gray-500 font-medium">คำสั่งทั้งหมด</p>
-                            <h3 class="text-2xl font-bold" id="stat-total-rules">0</h3>
-                        </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
+                        <p class="text-sm text-gray-500 font-medium">ยอดขายรวม (บาท)</p>
+                        <h3 class="text-2xl font-bold mt-1" id="stat-sales">฿0</h3>
                     </div>
-                </div>
-                <div class="mt-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-semibold text-lg mb-2">ยินดีต้อนรับสู่ระบบจัดการ</h3>
-                    <p class="text-gray-500 text-sm">เลื่อนไปที่เมนู "จัดการคำสั่ง" เพื่อเพิ่มคำคีย์เวิร์ดให้บอทของคุณได้เลยครับ</p>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-orange-400">
+                        <p class="text-sm text-gray-500 font-medium">รอจัดส่ง (ออเดอร์)</p>
+                        <h3 class="text-2xl font-bold mt-1" id="stat-pending">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-green-500">
+                        <p class="text-sm text-gray-500 font-medium">จัดส่งแล้ว (ออเดอร์)</p>
+                        <h3 class="text-2xl font-bold mt-1" id="stat-shipped">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-red-500">
+                        <p class="text-sm text-gray-500 font-medium">สินค้าใกล้หมด (รายการ)</p>
+                        <h3 class="text-2xl font-bold mt-1" id="stat-lowstock">0</h3>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tab: Rules Management -->
-            <div id="tab-rules" class="tab-content">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                        <h3 class="text-lg font-semibold">รายการคำสั่งตอบกลับ</h3>
-                    </div>
-                    
-                    <!-- Add Rule Form -->
-                    <div class="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-200">
-                        <h4 class="font-medium text-gray-700 mb-3"><i class="fa-solid fa-plus mr-2"></i>เพิ่มคำสั่งใหม่</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <input type="text" id="input-keyword" placeholder="คำคีย์เวิร์ด (เช่น สวัสดี)" class="p-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none w-full">
-                            <select id="input-type" class="p-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none w-full bg-white">
-                                <option value="exact">ตรงเป๊ะ (Exact)</option>
-                                <option value="contains">มีคำนี้ผสมอยู่ (Contains)</option>
-                            </select>
-                            <input type="text" id="input-response" placeholder="คำตอบของบอท..." class="p-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none w-full">
-                            <button onclick="addRule()" class="bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg p-2 transition shadow-md w-full">บันทึกคำสั่ง</button>
+            <!-- Tab: Orders -->
+            <div id="tab-orders" class="tab-content">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between gap-4 items-center bg-gray-50/50">
+                        <div class="relative w-full md:w-64">
+                            <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" id="search-order" onkeyup="renderOrders()" placeholder="ค้นหาชื่อ, เบอร์โทร..." class="w-full pl-10 p-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none text-sm">
                         </div>
+                        <button onclick="openModal('orderModal')" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition shadow-sm flex items-center justify-center">
+                            <i class="fa-solid fa-plus mr-2"></i> สร้างออเดอร์ใหม่
+                        </button>
                     </div>
-
-                    <!-- Rules List -->
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
+                        <table class="w-full text-left border-collapse min-w-[800px]">
                             <thead>
-                                <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 text-sm">
-                                    <th class="p-3 font-medium rounded-tl-lg">คีย์เวิร์ด</th>
-                                    <th class="p-3 font-medium">ประเภทการจับคู่</th>
-                                    <th class="p-3 font-medium">คำตอบ</th>
-                                    <th class="p-3 font-medium text-right rounded-tr-lg">จัดการ</th>
+                                <tr class="bg-white border-b border-gray-100 text-gray-500 text-sm">
+                                    <th class="p-4 font-medium">วันที่ / รหัส</th>
+                                    <th class="p-4 font-medium">ลูกค้า</th>
+                                    <th class="p-4 font-medium">ยอดรวม</th>
+                                    <th class="p-4 font-medium">สถานะ</th>
+                                    <th class="p-4 font-medium text-center">จัดการ (Print/Copy)</th>
                                 </tr>
                             </thead>
-                            <tbody id="rules-table-body" class="text-sm">
-                                <!-- Rules will be rendered here -->
+                            <tbody id="orders-table-body" class="text-sm">
+                                <!-- Orders Render Here -->
                             </tbody>
                         </table>
-                        <div id="no-rules-msg" class="text-center py-8 text-gray-400 hidden">ยังไม่มีคำสั่งใดๆ เพิ่มคำสั่งด้านบนได้เลย</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab: Settings -->
-            <div id="tab-settings" class="tab-content">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 max-w-2xl">
-                    <h3 class="text-lg font-semibold mb-6">ตั้งค่าบอททั่วไป</h3>
-                    
-                    <div class="mb-4">
-                        <label class="block text-gray-700 font-medium mb-2">ข้อความตอบกลับเริ่มต้น (Fallback Message)</label>
-                        <p class="text-xs text-gray-500 mb-2">บอทจะตอบข้อความนี้ เมื่อพิมพ์สิ่งที่ไม่ตรงกับคีย์เวิร์ดใดๆ เลย (ปล่อยว่างไว้หากไม่ต้องการให้บอทตอบ)</p>
-                        <textarea id="input-fallback" rows="3" class="w-full p-3 border rounded-xl focus:ring-2 focus:ring-green-400 outline-none resize-none" placeholder="เช่น ขออภัยค่ะ บอทยังไม่เข้าใจคำถาม..."></textarea>
-                    </div>
-                    
-                    <button onclick="saveSettings()" class="bg-gray-800 hover:bg-gray-900 text-white font-medium rounded-xl px-6 py-2.5 transition shadow-md">บันทึกการตั้งค่า</button>
-                </div>
-            </div>
-
-            <!-- Tab: Tester -->
-            <div id="tab-tester" class="tab-content">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col max-w-md mx-auto h-[600px]">
-                    <div class="bg-slate-800 text-white p-4 rounded-t-2xl flex items-center">
-                        <i class="fa-solid fa-robot text-2xl mr-3"></i>
-                        <div>
-                            <h3 class="font-semibold">Bot Simulator</h3>
-                            <p class="text-xs text-slate-300">ทดสอบโดยไม่ต้องเปิด LINE</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Chat Area -->
-                    <div id="chat-box" class="flex-1 p-4 overflow-y-auto bg-gray-100 flex flex-col gap-3">
-                        <div class="flex items-start gap-2">
-                            <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm border border-gray-200">
-                                ลองพิมพ์ทักทาย หรือ พิมพ์คีย์เวิร์ดที่คุณตั้งค่าไว้ดูสิ!
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Input Area -->
-                    <div class="p-3 bg-white border-t border-gray-200 rounded-b-2xl flex gap-2">
-                        <input type="text" id="chat-input" placeholder="พิมพ์ข้อความ..." class="flex-1 p-2 bg-gray-100 rounded-full px-4 outline-none focus:ring-2 focus:ring-slate-300 text-sm" onkeypress="if(event.key === 'Enter') simulateChat()">
-                        <button onclick="simulateChat()" class="bg-green-500 text-white h-10 w-10 rounded-full flex items-center justify-center hover:bg-green-600 transition">
-                            <i class="fa-solid fa-paper-plane text-sm"></i>
+            <!-- Tab: Products -->
+            <div id="tab-products" class="tab-content">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between gap-4 items-center bg-gray-50/50">
+                        <h3 class="font-semibold text-lg text-gray-700">คลังสินค้า (สต๊อก)</h3>
+                        <button onclick="openModal('productModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition shadow-sm">
+                            <i class="fa-solid fa-plus mr-2"></i> เพิ่มสินค้า
                         </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-5" id="products-grid">
+                        <!-- Products Render Here -->
                     </div>
                 </div>
             </div>
 
         </div>
+
+        <!-- Print Area (Hidden normally) -->
+        <div id="print-area" class="hidden bg-white text-black p-8">
+            <div class="border-2 border-black p-6 rounded-lg max-w-md mx-auto relative">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2">ใบปะหน้าพัสดุ (Shipping Label)</h2>
+                <div class="mb-4">
+                    <p class="text-sm text-gray-500">ผู้ส่ง:</p>
+                    <p class="font-bold">ร้าน StorePro Online</p>
+                    <p>โทร: 080-000-0000</p>
+                </div>
+                <div class="mb-4 bg-gray-100 p-4 rounded border border-gray-300">
+                    <p class="text-sm text-gray-500 mb-1">ผู้รับ (กรุณาส่ง):</p>
+                    <p class="font-bold text-xl" id="print-name">ชื่อลูกค้า</p>
+                    <p class="text-lg" id="print-phone">เบอร์โทร</p>
+                    <p class="mt-2 text-md" id="print-address">ที่อยู่...</p>
+                </div>
+                <div class="text-right text-sm text-gray-500" id="print-order-id">Ref: #ORDER123</div>
+            </div>
+        </div>
     </main>
 
+    <!-- Modal: Add Product -->
+    <div id="productModal" class="modal fixed inset-0 bg-black/50 z-50 items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-[fadeIn_0.2s]">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg">เพิ่ม/แก้ไข สินค้า</h3>
+                <button onclick="closeModal('productModal')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-5 space-y-4">
+                <input type="hidden" id="prod-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อสินค้า</label>
+                    <input type="text" id="prod-name" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ราคา (฿)</label>
+                        <input type="number" id="prod-price" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนสต๊อก</label>
+                        <input type="number" id="prod-stock" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <button onclick="saveProduct()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl mt-4 hover:bg-blue-700 transition">บันทึกสินค้า</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Order -->
+    <div id="orderModal" class="modal fixed inset-0 bg-black/50 z-50 items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg">สร้างออเดอร์ใหม่ (Manual)</h3>
+                <button onclick="closeModal('orderModal')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อลูกค้า</label>
+                        <input type="text" id="ord-name" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์</label>
+                        <input type="text" id="ord-phone" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่จัดส่ง</label>
+                    <textarea id="ord-address" rows="2" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500 resize-none"></textarea>
+                </div>
+                <div class="border-t border-gray-200 pt-4 mt-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">เลือกสินค้า</label>
+                    <select id="ord-product-select" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none mb-2">
+                        <!-- Options generated via JS -->
+                    </select>
+                </div>
+            </div>
+            <div class="p-5 border-t bg-gray-50">
+                <button onclick="saveOrder()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition">สร้างออเดอร์</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- 1. การตั้งค่า Firebase ---
+        // --- 1. Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyAWUWpDnF5Yt7QQ0ULvsxSVJhV0ckGMfu8",
             authDomain: "chatcharin-af5e4.firebaseapp.com",
@@ -183,181 +241,214 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
-        // ตัวแปรเก็บข้อมูลสำหรับหน้าเว็บ
-        let botRules = {};
-        let botSettings = { fallback: "" };
 
-        // --- 2. ระบบ UI Navigation ---
-        const pageTitles = {
-            'dashboard': 'ภาพรวมระบบ (Dashboard)',
-            'rules': 'จัดการคำสั่ง (Rules Manager)',
-            'settings': 'ตั้งค่าบอท (Bot Settings)',
-            'tester': 'หน้าต่างทดสอบ (Simulator)'
-        };
+        let productsData = {};
+        let ordersData = {};
 
+        // --- 2. UI Navigation & Modals ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById('tab-' + tabId).classList.add('active');
             
             document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('bg-green-50', 'text-green-600');
+                el.classList.remove('bg-blue-50', 'text-blue-600');
                 el.classList.add('text-gray-500');
             });
             let activeBtn = document.getElementById('nav-' + tabId);
             activeBtn.classList.remove('text-gray-500');
-            activeBtn.classList.add('bg-green-50', 'text-green-600');
+            activeBtn.classList.add('bg-blue-50', 'text-blue-600');
             
-            document.getElementById('page-title').innerText = pageTitles[tabId];
+            const titles = { 'dashboard': 'ภาพรวมยอดขาย', 'orders': 'จัดการออเดอร์', 'products': 'จัดการคลังสินค้า' };
+            document.getElementById('page-title').innerText = titles[tabId];
         }
 
-        // --- 3. ดึงข้อมูลจาก Firebase ทันทีแบบ Real-time ---
-        // ใช้ Path ใหม่ bot_data/rules และ bot_data/settings เพื่อโครงสร้างที่เป็นระเบียบ
-        db.ref('bot_data/rules').on('value', (snap) => {
-            botRules = snap.val() || {};
-            renderRules();
-            document.getElementById('stat-total-rules').innerText = Object.keys(botRules).length;
+        function openModal(id) { 
+            document.getElementById(id).classList.add('active'); 
+            if(id === 'orderModal') populateProductSelect();
+        }
+        function closeModal(id) { 
+            document.getElementById(id).classList.remove('active'); 
+            clearForms();
+        }
+        function clearForms() {
+            document.getElementById('prod-id').value = '';
+            document.getElementById('prod-name').value = '';
+            document.getElementById('prod-price').value = '';
+            document.getElementById('prod-stock').value = '';
+            document.getElementById('ord-name').value = '';
+            document.getElementById('ord-phone').value = '';
+            document.getElementById('ord-address').value = '';
+        }
+
+        // --- 3. ดึงข้อมูล Real-time ---
+        db.ref('store_data/products').on('value', snap => {
+            productsData = snap.val() || {};
+            renderProducts();
+            updateDashboard();
         });
 
-        db.ref('bot_data/settings').on('value', (snap) => {
-            botSettings = snap.val() || { fallback: "" };
-            document.getElementById('input-fallback').value = botSettings.fallback || "";
+        db.ref('store_data/orders').on('value', snap => {
+            ordersData = snap.val() || {};
+            renderOrders();
+            updateDashboard();
         });
 
-        // --- 4. ฟังก์ชันจัดการคำสั่ง (Rules CRUD) ---
-        function addRule() {
-            const k = document.getElementById('input-keyword').value.trim();
-            const type = document.getElementById('input-type').value;
-            const r = document.getElementById('input-response').value.trim();
-            
-            if(!k || !r) return Swal.fire('ข้อผิดพลาด', 'กรุณากรอกคีย์เวิร์ดและคำตอบให้ครบถ้วน', 'error');
+        // --- 4. จัดการสินค้า (Products) ---
+        function saveProduct() {
+            const id = document.getElementById('prod-id').value || 'P' + Date.now();
+            const name = document.getElementById('prod-name').value.trim();
+            const price = parseFloat(document.getElementById('prod-price').value);
+            const stock = parseInt(document.getElementById('prod-stock').value);
 
-            const ruleId = 'rule_' + Date.now(); // สร้าง ID สุ่มป้องกันบัคตัวอักษรพิเศษ
-            
-            db.ref(`bot_data/rules/${ruleId}`).set({
-                keyword: k,
-                type: type,
-                response: r
-            }).then(() => {
-                Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1500 });
-                document.getElementById('input-keyword').value = '';
-                document.getElementById('input-response').value = '';
+            if(!name || isNaN(price) || isNaN(stock)) return Swal.fire('ผิดพลาด', 'กรอกข้อมูลให้ครบถ้วน', 'error');
+
+            db.ref(`store_data/products/${id}`).set({ name, price, stock }).then(() => {
+                Swal.fire({icon: 'success', title: 'บันทึกสินค้าแล้ว', showConfirmButton: false, timer: 1000});
+                closeModal('productModal');
             });
         }
 
-        function deleteRule(id) {
-            Swal.fire({
-                title: 'ยืนยันการลบ?',
-                text: "หากลบแล้วจะไม่สามารถกู้คืนได้!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#94a3b8',
-                confirmButtonText: 'ใช่, ลบเลย!',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    db.ref(`bot_data/rules/${id}`).remove();
-                    Swal.fire({ icon: 'success', title: 'ลบเรียบร้อย', showConfirmButton: false, timer: 1000 });
-                }
+        function deleteProduct(id) {
+            Swal.fire({ title: 'ลบสินค้านี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบเลย' })
+            .then((res) => { if(res.isConfirmed) db.ref(`store_data/products/${id}`).remove(); });
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            Object.entries(productsData).forEach(([id, p]) => {
+                const stockColor = p.stock > 5 ? 'text-green-500' : 'text-red-500';
+                grid.innerHTML += `
+                    <div class="border border-gray-200 rounded-xl p-4 bg-white hover:shadow-md transition">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-gray-800">${p.name}</h4>
+                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-md">฿${p.price}</span>
+                        </div>
+                        <p class="text-sm text-gray-500">คงเหลือ: <span class="font-bold ${stockColor}">${p.stock}</span> ชิ้น</p>
+                        <div class="mt-4 flex gap-2">
+                            <button onclick="deleteProduct('${id}')" class="text-xs text-red-500 bg-red-50 px-3 py-1.5 rounded-lg w-full hover:bg-red-100">ลบ</button>
+                        </div>
+                    </div>`;
             });
         }
 
-        function renderRules() {
-            const tbody = document.getElementById('rules-table-body');
-            const noMsg = document.getElementById('no-rules-msg');
+        function populateProductSelect() {
+            const sel = document.getElementById('ord-product-select');
+            sel.innerHTML = '<option value="">-- เลือกสินค้า --</option>';
+            Object.entries(productsData).forEach(([id, p]) => {
+                if(p.stock > 0) sel.innerHTML += `<option value="${id}">${p.name} (฿${p.price})</option>`;
+            });
+        }
+
+        // --- 5. จัดการออเดอร์ (Orders) ---
+        function saveOrder() {
+            const name = document.getElementById('ord-name').value.trim();
+            const phone = document.getElementById('ord-phone').value.trim();
+            const address = document.getElementById('ord-address').value.trim();
+            const prodId = document.getElementById('ord-product-select').value;
+
+            if(!name || !phone || !address || !prodId) return Swal.fire('ผิดพลาด', 'กรอกข้อมูลให้ครบถ้วน', 'error');
+
+            const prod = productsData[prodId];
+            const orderId = 'ORD' + Date.now();
+            const dateStr = new Date().toLocaleString('th-TH');
+
+            const orderData = {
+                customerName: name, phone: phone, address: address,
+                productName: prod.name, price: prod.price, total: prod.price,
+                status: 'pending', date: dateStr, source: 'Manual'
+            };
+
+            // ลดสต๊อก
+            db.ref(`store_data/products/${prodId}/stock`).set(prod.stock - 1);
+            // บันทึกออเดอร์
+            db.ref(`store_data/orders/${orderId}`).set(orderData).then(() => {
+                Swal.fire({icon: 'success', title: 'สร้างออเดอร์สำเร็จ', showConfirmButton: false, timer: 1000});
+                closeModal('orderModal');
+            });
+        }
+
+        function updateOrderStatus(id, newStatus) {
+            db.ref(`store_data/orders/${id}/status`).set(newStatus);
+        }
+
+        function renderOrders() {
+            const tbody = document.getElementById('orders-table-body');
+            const searchTxt = document.getElementById('search-order').value.toLowerCase();
             tbody.innerHTML = '';
-            
-            const entries = Object.entries(botRules);
-            if(entries.length === 0) {
-                noMsg.classList.remove('hidden');
-            } else {
-                noMsg.classList.add('hidden');
-                entries.forEach(([id, data]) => {
-                    const badgeClass = data.type === 'exact' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700';
-                    const typeText = data.type === 'exact' ? 'ตรงเป๊ะ' : 'มีคำนี้ผสมอยู่';
+
+            // Sort by newest
+            const sortedOrders = Object.entries(ordersData).reverse();
+
+            sortedOrders.forEach(([id, o]) => {
+                if(o.customerName.toLowerCase().includes(searchTxt) || o.phone.includes(searchTxt)) {
                     
+                    let statusHtml = '';
+                    if(o.status === 'pending') statusHtml = `<select onchange="updateOrderStatus('${id}', this.value)" class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded outline-none cursor-pointer"><option value="pending" selected>รอจัดส่ง</option><option value="shipped">จัดส่งแล้ว</option><option value="cancelled">ยกเลิก</option></select>`;
+                    else if(o.status === 'shipped') statusHtml = `<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">จัดส่งแล้ว</span>`;
+                    else statusHtml = `<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">ยกเลิก</span>`;
+
                     tbody.innerHTML += `
-                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
-                            <td class="p-3 font-medium text-gray-800">${data.keyword}</td>
-                            <td class="p-3"><span class="px-2 py-1 text-xs rounded-md ${badgeClass}">${typeText}</span></td>
-                            <td class="p-3 text-gray-600 truncate max-w-[200px]" title="${data.response}">${data.response}</td>
-                            <td class="p-3 text-right">
-                                <button onclick="deleteRule('${id}')" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-lg transition"><i class="fa-solid fa-trash"></i></button>
+                        <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
+                            <td class="p-4">
+                                <div class="font-medium text-gray-800">${id}</div>
+                                <div class="text-xs text-gray-400">${o.date}</div>
+                                <div class="text-xs text-blue-500 mt-1"><i class="fa-solid fa-tag"></i> ${o.productName}</div>
+                            </td>
+                            <td class="p-4">
+                                <div class="font-medium text-gray-800">${o.customerName}</div>
+                                <div class="text-xs text-gray-500"><i class="fa-solid fa-phone"></i> ${o.phone}</div>
+                            </td>
+                            <td class="p-4 font-bold text-gray-800">฿${o.total.toLocaleString()}</td>
+                            <td class="p-4">${statusHtml}</td>
+                            <td class="p-4 text-center space-x-2 flex justify-center">
+                                <button onclick="printLabel('${id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg tooltip" title="ปริ้นใบปะหน้า"><i class="fa-solid fa-print"></i></button>
+                                <button onclick="copySummary('${id}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-lg tooltip" title="คัดลอกสรุปยอด"><i class="fa-solid fa-copy"></i></button>
                             </td>
                         </tr>
                     `;
-                });
-            }
-        }
-
-        // --- 5. ฟังก์ชันตั้งค่าบอท ---
-        function saveSettings() {
-            const fb = document.getElementById('input-fallback').value.trim();
-            db.ref('bot_data/settings/fallback').set(fb).then(() => {
-                Swal.fire({ icon: 'success', title: 'บันทึกการตั้งค่าสำเร็จ', showConfirmButton: false, timer: 1500 });
+                }
             });
         }
 
-        // --- 6. ฟังก์ชัน Simulator (หน้าทดสอบบอท) ---
-        function simulateChat() {
-            const inputEl = document.getElementById('chat-input');
-            const msg = inputEl.value.trim();
-            if(!msg) return;
-
-            appendChat('user', msg);
-            inputEl.value = '';
-
-            // จำลองการคิดของบอท
-            setTimeout(() => {
-                let reply = checkBotLogic(msg);
-                if(reply) appendChat('bot', reply);
-            }, 500);
+        // --- 6. ฟีเจอร์พิเศษ (Print & Copy Summary) ---
+        function printLabel(id) {
+            const o = ordersData[id];
+            document.getElementById('print-name').innerText = o.customerName;
+            document.getElementById('print-phone').innerText = o.phone;
+            document.getElementById('print-address').innerText = o.address;
+            document.getElementById('print-order-id').innerText = `Ref: #${id}`;
+            
+            document.getElementById('print-area').classList.remove('hidden');
+            window.print();
+            document.getElementById('print-area').classList.add('hidden');
         }
 
-        function checkBotLogic(msg) {
-            let userMsgLower = msg.toLowerCase();
-            let exactMatch = null;
-            let containsMatch = null;
-
-            // วนลูปหาคำสั่งที่ตรงกัน
-            for (const key in botRules) {
-                let rule = botRules[key];
-                let keywordLower = rule.keyword.toLowerCase();
-                
-                if (rule.type === 'exact' && userMsgLower === keywordLower) {
-                    exactMatch = rule.response;
-                    break; // Exact match สำคัญสุด เจอแล้วหยุดเลย
-                }
-                if (rule.type === 'contains' && userMsgLower.includes(keywordLower)) {
-                    containsMatch = rule.response; 
-                }
-            }
-
-            if (exactMatch) return exactMatch;
-            if (containsMatch) return containsMatch;
-            if (botSettings.fallback) return botSettings.fallback;
-            return null; // ไม่มีตั้งค่าอะไรไว้เลย ก็ไม่ตอบ
+        function copySummary(id) {
+            const o = ordersData[id];
+            const text = `📦 สรุปคำสั่งซื้อ\nรหัส: ${id}\nชื่อ: ${o.customerName}\nสินค้า: ${o.productName}\nยอดรวม: ฿${o.total}\n\nสถานะ: ${o.status === 'pending'?'รอจัดส่ง':'จัดส่งแล้ว'}\nขอบคุณที่อุดหนุนครับ 🙏`;
+            navigator.clipboard.writeText(text).then(() => {
+                Swal.fire({icon: 'success', title: 'คัดลอกข้อความแล้ว', text: 'นำไปวางใน LINE ให้ลูกค้าได้เลย', showConfirmButton: false, timer: 1500});
+            });
         }
 
-        function appendChat(sender, text) {
-            const box = document.getElementById('chat-box');
-            if(sender === 'user') {
-                box.innerHTML += `
-                    <div class="flex justify-end gap-2 animate-[fadeIn_0.2s_ease-in-out]">
-                        <div class="bg-green-500 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm text-sm max-w-[80%] break-words">
-                            ${text}
-                        </div>
-                    </div>`;
-            } else {
-                box.innerHTML += `
-                    <div class="flex items-start gap-2 animate-[fadeIn_0.2s_ease-in-out]">
-                        <div class="bg-white text-gray-800 border border-gray-200 p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm max-w-[80%] break-words">
-                            ${text}
-                        </div>
-                    </div>`;
-            }
-            box.scrollTop = box.scrollHeight;
+        // --- 7. Dashboard สรุปยอด ---
+        function updateDashboard() {
+            let totalSales = 0, pending = 0, shipped = 0, lowStock = 0;
+
+            Object.values(ordersData).forEach(o => {
+                if(o.status === 'shipped') { totalSales += Number(o.total); shipped++; }
+                if(o.status === 'pending') pending++;
+            });
+
+            Object.values(productsData).forEach(p => {
+                if(p.stock <= 5) lowStock++;
+            });
+
+            document.getElementById('stat-sales').innerText = `฿${totalSales.toLocaleString()}`;
+            document.getElementById('stat-pending').innerText = pending;
+            document.getElementById('stat-shipped').innerText = shipped;
+            document.getElementById('stat-lowstock').innerText = lowStock;
         }
     </script>
 </body>
