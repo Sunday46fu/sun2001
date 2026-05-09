@@ -19,7 +19,7 @@ const db = getDatabase(app);
 // --- 2. LINE Configuration (ใส่ Token ของคุณตรงนี้) ---
 const lineConfig = {
     channelAccessToken: "G2tV047Ye/9jN50ooyrY6QhRCXip8f0/WzaV965OuzbxAXvRzLJQOyurIKf8wYdBWwB/zN43ATmJSU8ne+vj+RqMTb1iq0qy94ldu60t/Cl/1Pf4r54/0GZriA9ZRZ1RQpwuxwHX5mAUYqvbXKDMIwdB04t89/1O/w1cDnyilFU=",
-    channelSecret: "ใส่_CHANNEL_SECRET_ของคุณตรงนี้"
+    channelSecret: "8a7230094032319398e758664fa6ce26"
 };
 
 const client = new line.messagingApi.MessagingApiClient({
