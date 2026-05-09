@@ -3,227 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Store Management Pro | ระบบจัดการร้านค้า</title>
-    <!-- Tailwind CSS -->
+    <title>Super Store Admin - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
-        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
-        .tab-content, .modal { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s ease-out; }
-        .modal.active { display: flex; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        
-        /* ระบบปริ้นใบปะหน้า */
-        @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
-            .no-print { display: none !important; }
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; background: #f8fafc; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden text-gray-800">
+<body class="bg-slate-50 min-h-screen">
 
-    <!-- Sidebar -->
-    <aside class="w-16 md:w-64 bg-white border-r border-gray-200 flex flex-col justify-between transition-all duration-300 z-50 shadow-sm">
-        <div>
-            <div class="h-16 flex items-center justify-center md:justify-start md:px-6 border-b border-gray-100">
-                <div class="bg-blue-600 text-white p-1.5 rounded-lg"><i class="fa-solid fa-store text-xl"></i></div>
-                <span class="ml-3 font-bold text-lg hidden md:block text-slate-800">Store<span class="text-blue-600">Pro</span></span>
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-40 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200">
+                <i class="fa-solid fa-rocket text-xl"></i>
             </div>
-            <nav class="p-2 md:p-4 space-y-1 mt-2">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center justify-center md:justify-start p-3 rounded-xl bg-blue-50 text-blue-600 transition">
-                    <i class="fa-solid fa-chart-line text-xl md:text-base w-6"></i>
-                    <span class="ml-3 font-medium hidden md:block">ภาพรวม (Dashboard)</span>
-                </button>
-                <button onclick="switchTab('orders')" id="nav-orders" class="nav-btn w-full flex items-center justify-center md:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition">
-                    <i class="fa-solid fa-box-open text-xl md:text-base w-6"></i>
-                    <span class="ml-3 font-medium hidden md:block">ออเดอร์ (Orders)</span>
-                </button>
-                <button onclick="switchTab('products')" id="nav-products" class="nav-btn w-full flex items-center justify-center md:justify-start p-3 rounded-xl text-gray-500 hover:bg-gray-50 transition">
-                    <i class="fa-solid fa-tags text-xl md:text-base w-6"></i>
-                    <span class="ml-3 font-medium hidden md:block">สินค้า (Products)</span>
-                </button>
-            </nav>
+            <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">Super Admin App</h1>
         </div>
-    </aside>
+        <button onclick="openProductModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2">
+            <i class="fa-solid fa-plus"></i> เพิ่มสินค้าใหม่
+        </button>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col h-screen overflow-y-auto relative">
-        <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 shadow-sm sticky top-0 z-40 justify-between">
-            <h1 class="text-xl font-semibold text-gray-800" id="page-title">ภาพรวมยอดขาย</h1>
-            <div class="flex items-center gap-3">
-                <span class="relative flex h-3 w-3">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                </span>
-                <span class="text-sm font-medium text-gray-500">ระบบออนไลน์</span>
+    <main class="max-w-7xl mx-auto p-6 space-y-8">
+        <!-- Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-slate-500 text-sm">ยอดออเดอร์วันนี้</p>
+                <h2 id="stat-orders" class="text-3xl font-bold mt-1 text-slate-800">0</h2>
             </div>
-        </header>
-
-        <div class="p-4 md:p-8 pb-20">
-            
-            <!-- Tab: Dashboard -->
-            <div id="tab-dashboard" class="tab-content active">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
-                        <p class="text-sm text-gray-500 font-medium">ยอดขายรวม (บาท)</p>
-                        <h3 class="text-2xl font-bold mt-1" id="stat-sales">฿0</h3>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-orange-400">
-                        <p class="text-sm text-gray-500 font-medium">รอจัดส่ง (ออเดอร์)</p>
-                        <h3 class="text-2xl font-bold mt-1" id="stat-pending">0</h3>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-green-500">
-                        <p class="text-sm text-gray-500 font-medium">จัดส่งแล้ว (ออเดอร์)</p>
-                        <h3 class="text-2xl font-bold mt-1" id="stat-shipped">0</h3>
-                    </div>
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-red-500">
-                        <p class="text-sm text-gray-500 font-medium">สินค้าใกล้หมด (รายการ)</p>
-                        <h3 class="text-2xl font-bold mt-1" id="stat-lowstock">0</h3>
-                    </div>
-                </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-slate-500 text-sm">สต๊อกสินค้าทั้งหมด</p>
+                <h2 id="stat-stock" class="text-3xl font-bold mt-1 text-blue-600">0</h2>
             </div>
-
-            <!-- Tab: Orders -->
-            <div id="tab-orders" class="tab-content">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between gap-4 items-center bg-gray-50/50">
-                        <div class="relative w-full md:w-64">
-                            <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
-                            <input type="text" id="search-order" onkeyup="renderOrders()" placeholder="ค้นหาชื่อ, เบอร์โทร..." class="w-full pl-10 p-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none text-sm">
-                        </div>
-                        <button onclick="openModal('orderModal')" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition shadow-sm flex items-center justify-center">
-                            <i class="fa-solid fa-plus mr-2"></i> สร้างออเดอร์ใหม่
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse min-w-[800px]">
-                            <thead>
-                                <tr class="bg-white border-b border-gray-100 text-gray-500 text-sm">
-                                    <th class="p-4 font-medium">วันที่ / รหัส</th>
-                                    <th class="p-4 font-medium">ลูกค้า</th>
-                                    <th class="p-4 font-medium">ยอดรวม</th>
-                                    <th class="p-4 font-medium">สถานะ</th>
-                                    <th class="p-4 font-medium text-center">จัดการ (Print/Copy)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table-body" class="text-sm">
-                                <!-- Orders Render Here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                <p class="text-slate-500 text-sm">สินค้าในระบบ</p>
+                <h2 id="stat-items" class="text-3xl font-bold mt-1 text-indigo-600">0</h2>
             </div>
-
-            <!-- Tab: Products -->
-            <div id="tab-products" class="tab-content">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between gap-4 items-center bg-gray-50/50">
-                        <h3 class="font-semibold text-lg text-gray-700">คลังสินค้า (สต๊อก)</h3>
-                        <button onclick="openModal('productModal')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl font-medium transition shadow-sm">
-                            <i class="fa-solid fa-plus mr-2"></i> เพิ่มสินค้า
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-5" id="products-grid">
-                        <!-- Products Render Here -->
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-        <!-- Print Area (Hidden normally) -->
-        <div id="print-area" class="hidden bg-white text-black p-8">
-            <div class="border-2 border-black p-6 rounded-lg max-w-md mx-auto relative">
-                <h2 class="text-2xl font-bold mb-4 border-b pb-2">ใบปะหน้าพัสดุ (Shipping Label)</h2>
-                <div class="mb-4">
-                    <p class="text-sm text-gray-500">ผู้ส่ง:</p>
-                    <p class="font-bold">ร้าน StorePro Online</p>
-                    <p>โทร: 080-000-0000</p>
-                </div>
-                <div class="mb-4 bg-gray-100 p-4 rounded border border-gray-300">
-                    <p class="text-sm text-gray-500 mb-1">ผู้รับ (กรุณาส่ง):</p>
-                    <p class="font-bold text-xl" id="print-name">ชื่อลูกค้า</p>
-                    <p class="text-lg" id="print-phone">เบอร์โทร</p>
-                    <p class="mt-2 text-md" id="print-address">ที่อยู่...</p>
-                </div>
-                <div class="text-right text-sm text-gray-500" id="print-order-id">Ref: #ORDER123</div>
+        <section>
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fa-solid fa-box-open text-blue-500"></i> จัดการสินค้าในคลัง</h3>
+            <div id="products-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <!-- Product Cards here -->
             </div>
-        </div>
+        </section>
     </main>
 
-    <!-- Modal: Add Product -->
-    <div id="productModal" class="modal fixed inset-0 bg-black/50 z-50 items-center justify-center backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden animate-[fadeIn_0.2s]">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-lg">เพิ่ม/แก้ไข สินค้า</h3>
-                <button onclick="closeModal('productModal')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
+    <!-- Modal เพิ่มสินค้า -->
+    <div id="productModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl animate-[fadeIn_0.3s]">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-800">ข้อมูลสินค้า</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
             </div>
-            <div class="p-5 space-y-4">
+            <div class="p-6 space-y-5">
                 <input type="hidden" id="prod-id">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อสินค้า</label>
-                    <input type="text" id="prod-name" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ราคา (฿)</label>
-                        <input type="number" id="prod-price" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนสต๊อก</label>
-                        <input type="number" id="prod-stock" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
+                
+                <!-- อัปโหลดรูป -->
+                <div class="flex flex-col items-center p-4 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:border-blue-400 transition cursor-pointer relative">
+                    <input type="file" id="prod-file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewImage(this)">
+                    <img id="img-preview" src="" class="hidden w-full h-40 object-contain mb-2 rounded-lg">
+                    <div id="upload-placeholder" class="text-center">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-300 mb-2"></i>
+                        <p class="text-sm text-slate-500">คลิกเพื่อเลือกรูปภาพจากเครื่อง</p>
                     </div>
                 </div>
-                <button onclick="saveProduct()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl mt-4 hover:bg-blue-700 transition">บันทึกสินค้า</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- Modal: Add Order -->
-    <div id="orderModal" class="modal fixed inset-0 bg-black/50 z-50 items-center justify-center backdrop-blur-sm">
-        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div class="p-5 border-b flex justify-between items-center bg-gray-50">
-                <h3 class="font-bold text-lg">สร้างออเดอร์ใหม่ (Manual)</h3>
-                <button onclick="closeModal('orderModal')" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="p-5 overflow-y-auto flex-1 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อลูกค้า</label>
-                        <input type="text" id="ord-name" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">ชื่อสินค้า</label>
+                        <input type="text" id="prod-name" placeholder="ระบุชื่อสินค้า..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">เบอร์โทรศัพท์</label>
-                        <input type="text" id="ord-phone" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">ราคา (บาท)</label>
+                            <input type="number" id="prod-price" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">จำนวนสต๊อก</label>
+                            <input type="number" id="prod-stock" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ที่อยู่จัดส่ง</label>
-                    <textarea id="ord-address" rows="2" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none focus:border-blue-500 resize-none"></textarea>
-                </div>
-                <div class="border-t border-gray-200 pt-4 mt-2">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">เลือกสินค้า</label>
-                    <select id="ord-product-select" class="w-full p-2.5 border border-gray-300 rounded-xl outline-none mb-2">
-                        <!-- Options generated via JS -->
-                    </select>
-                </div>
-            </div>
-            <div class="p-5 border-t bg-gray-50">
-                <button onclick="saveOrder()" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 transition">สร้างออเดอร์</button>
+                <button id="btn-save" onclick="handleSave()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-blue-700 transition-all flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-save"></i> บันทึกข้อมูล
+                </button>
             </div>
         </div>
     </div>
@@ -232,224 +102,137 @@
         // --- 1. Firebase Config ---
         const firebaseConfig = {
             apiKey: "AIzaSyAWUWpDnF5Yt7QQ0ULvsxSVJhV0ckGMfu8",
-            authDomain: "chatcharin-af5e4.firebaseapp.com",
             databaseURL: "https://chatcharin-af5e4-default-rtdb.firebaseio.com",
             projectId: "chatcharin-af5e4",
-            storageBucket: "chatcharin-af5e4.firebasestorage.app",
-            messagingSenderId: "631954642041",
-            appId: "1:631954642041:web:586447ace8ad055ca3f0a8"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const imbbKey = '13feb354942b1cf393189ee5a5ae6c5a';
 
         let productsData = {};
-        let ordersData = {};
 
-        // --- 2. UI Navigation & Modals ---
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach(el => {
-                el.classList.remove('bg-blue-50', 'text-blue-600');
-                el.classList.add('text-gray-500');
+        // --- 2. Image Management ---
+        function previewImage(input) {
+            const preview = document.getElementById('img-preview');
+            const placeholder = document.getElementById('upload-placeholder');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('image', file);
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${imbbKey}`, {
+                method: 'POST',
+                body: formData
             });
-            let activeBtn = document.getElementById('nav-' + tabId);
-            activeBtn.classList.remove('text-gray-500');
-            activeBtn.classList.add('bg-blue-50', 'text-blue-600');
-            
-            const titles = { 'dashboard': 'ภาพรวมยอดขาย', 'orders': 'จัดการออเดอร์', 'products': 'จัดการคลังสินค้า' };
-            document.getElementById('page-title').innerText = titles[tabId];
+            const data = await res.json();
+            return data.data.url;
         }
 
-        function openModal(id) { 
-            document.getElementById(id).classList.add('active'); 
-            if(id === 'orderModal') populateProductSelect();
-        }
-        function closeModal(id) { 
-            document.getElementById(id).classList.remove('active'); 
-            clearForms();
-        }
-        function clearForms() {
+        // --- 3. Product Logic ---
+        function openProductModal() {
             document.getElementById('prod-id').value = '';
             document.getElementById('prod-name').value = '';
             document.getElementById('prod-price').value = '';
             document.getElementById('prod-stock').value = '';
-            document.getElementById('ord-name').value = '';
-            document.getElementById('ord-phone').value = '';
-            document.getElementById('ord-address').value = '';
+            document.getElementById('prod-file').value = '';
+            document.getElementById('img-preview').classList.add('hidden');
+            document.getElementById('upload-placeholder').classList.remove('hidden');
+            document.getElementById('productModal').classList.remove('hidden');
         }
 
-        // --- 3. ดึงข้อมูล Real-time ---
-        db.ref('store_data/products').on('value', snap => {
-            productsData = snap.val() || {};
-            renderProducts();
-            updateDashboard();
-        });
+        function closeModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
 
-        db.ref('store_data/orders').on('value', snap => {
-            ordersData = snap.val() || {};
-            renderOrders();
-            updateDashboard();
-        });
-
-        // --- 4. จัดการสินค้า (Products) ---
-        function saveProduct() {
+        async function handleSave() {
             const id = document.getElementById('prod-id').value || 'P' + Date.now();
-            const name = document.getElementById('prod-name').value.trim();
+            const name = document.getElementById('prod-name').value;
             const price = parseFloat(document.getElementById('prod-price').value);
             const stock = parseInt(document.getElementById('prod-stock').value);
+            const file = document.getElementById('prod-file').files[0];
+            const btn = document.getElementById('btn-save');
 
-            if(!name || isNaN(price) || isNaN(stock)) return Swal.fire('ผิดพลาด', 'กรอกข้อมูลให้ครบถ้วน', 'error');
+            if (!name || isNaN(price)) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อและราคาให้ถูกต้อง', 'warning');
 
-            db.ref(`store_data/products/${id}`).set({ name, price, stock }).then(() => {
-                Swal.fire({icon: 'success', title: 'บันทึกสินค้าแล้ว', showConfirmButton: false, timer: 1000});
-                closeModal('productModal');
-            });
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังอัปโหลด...';
+
+            try {
+                let imageUrl = productsData[id]?.image || 'https://via.placeholder.com/500';
+                if (file) {
+                    imageUrl = await uploadImage(file);
+                }
+
+                await db.ref(`store_data/products/${id}`).set({ name, price, stock, image: imageUrl });
+                Swal.fire({ icon: 'success', title: 'สำเร็จ', showConfirmButton: false, timer: 1000 });
+                closeModal();
+            } catch (e) {
+                Swal.fire('Error', 'อัปโหลดล้มเหลว: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> บันทึกข้อมูล';
+            }
         }
 
         function deleteProduct(id) {
-            Swal.fire({ title: 'ลบสินค้านี้?', icon: 'warning', showCancelButton: true, confirmButtonText: 'ลบเลย' })
-            .then((res) => { if(res.isConfirmed) db.ref(`store_data/products/${id}`).remove(); });
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "ลบแล้วกู้คืนไม่ได้นะ!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ลบเลย'
+            }).then((result) => {
+                if (result.isConfirmed) db.ref(`store_data/products/${id}`).remove();
+            });
         }
 
-        function renderProducts() {
+        // --- 4. Render & Sync ---
+        db.ref('store_data/products').on('value', snap => {
+            productsData = snap.val() || {};
             const grid = document.getElementById('products-grid');
             grid.innerHTML = '';
+            
+            let totalStock = 0;
+            let itemsCount = 0;
+
             Object.entries(productsData).forEach(([id, p]) => {
-                const stockColor = p.stock > 5 ? 'text-green-500' : 'text-red-500';
+                itemsCount++;
+                totalStock += p.stock;
                 grid.innerHTML += `
-                    <div class="border border-gray-200 rounded-xl p-4 bg-white hover:shadow-md transition">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-bold text-gray-800">${p.name}</h4>
-                            <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-md">฿${p.price}</span>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                        <div class="relative h-44 overflow-hidden">
+                            <img src="${p.image}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                            <div class="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-xs font-bold text-slate-700">
+                                ${p.stock > 0 ? 'สต๊อก: ' + p.stock : '<span class="text-red-500">หมด</span>'}
+                            </div>
                         </div>
-                        <p class="text-sm text-gray-500">คงเหลือ: <span class="font-bold ${stockColor}">${p.stock}</span> ชิ้น</p>
-                        <div class="mt-4 flex gap-2">
-                            <button onclick="deleteProduct('${id}')" class="text-xs text-red-500 bg-red-50 px-3 py-1.5 rounded-lg w-full hover:bg-red-100">ลบ</button>
+                        <div class="p-4">
+                            <h4 class="font-bold text-slate-800 truncate mb-1">${p.name}</h4>
+                            <p class="text-blue-600 font-bold text-lg">฿${p.price.toLocaleString()}</p>
+                            <div class="flex gap-2 mt-4">
+                                <button onclick="deleteProduct('${id}')" class="flex-1 text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition">ลบ</button>
+                            </div>
                         </div>
                     </div>`;
             });
-        }
 
-        function populateProductSelect() {
-            const sel = document.getElementById('ord-product-select');
-            sel.innerHTML = '<option value="">-- เลือกสินค้า --</option>';
-            Object.entries(productsData).forEach(([id, p]) => {
-                if(p.stock > 0) sel.innerHTML += `<option value="${id}">${p.name} (฿${p.price})</option>`;
-            });
-        }
+            document.getElementById('stat-stock').innerText = totalStock;
+            document.getElementById('stat-items').innerText = itemsCount;
+        });
 
-        // --- 5. จัดการออเดอร์ (Orders) ---
-        function saveOrder() {
-            const name = document.getElementById('ord-name').value.trim();
-            const phone = document.getElementById('ord-phone').value.trim();
-            const address = document.getElementById('ord-address').value.trim();
-            const prodId = document.getElementById('ord-product-select').value;
-
-            if(!name || !phone || !address || !prodId) return Swal.fire('ผิดพลาด', 'กรอกข้อมูลให้ครบถ้วน', 'error');
-
-            const prod = productsData[prodId];
-            const orderId = 'ORD' + Date.now();
-            const dateStr = new Date().toLocaleString('th-TH');
-
-            const orderData = {
-                customerName: name, phone: phone, address: address,
-                productName: prod.name, price: prod.price, total: prod.price,
-                status: 'pending', date: dateStr, source: 'Manual'
-            };
-
-            // ลดสต๊อก
-            db.ref(`store_data/products/${prodId}/stock`).set(prod.stock - 1);
-            // บันทึกออเดอร์
-            db.ref(`store_data/orders/${orderId}`).set(orderData).then(() => {
-                Swal.fire({icon: 'success', title: 'สร้างออเดอร์สำเร็จ', showConfirmButton: false, timer: 1000});
-                closeModal('orderModal');
-            });
-        }
-
-        function updateOrderStatus(id, newStatus) {
-            db.ref(`store_data/orders/${id}/status`).set(newStatus);
-        }
-
-        function renderOrders() {
-            const tbody = document.getElementById('orders-table-body');
-            const searchTxt = document.getElementById('search-order').value.toLowerCase();
-            tbody.innerHTML = '';
-
-            // Sort by newest
-            const sortedOrders = Object.entries(ordersData).reverse();
-
-            sortedOrders.forEach(([id, o]) => {
-                if(o.customerName.toLowerCase().includes(searchTxt) || o.phone.includes(searchTxt)) {
-                    
-                    let statusHtml = '';
-                    if(o.status === 'pending') statusHtml = `<select onchange="updateOrderStatus('${id}', this.value)" class="bg-orange-100 text-orange-700 text-xs px-2 py-1 rounded outline-none cursor-pointer"><option value="pending" selected>รอจัดส่ง</option><option value="shipped">จัดส่งแล้ว</option><option value="cancelled">ยกเลิก</option></select>`;
-                    else if(o.status === 'shipped') statusHtml = `<span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">จัดส่งแล้ว</span>`;
-                    else statusHtml = `<span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">ยกเลิก</span>`;
-
-                    tbody.innerHTML += `
-                        <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
-                            <td class="p-4">
-                                <div class="font-medium text-gray-800">${id}</div>
-                                <div class="text-xs text-gray-400">${o.date}</div>
-                                <div class="text-xs text-blue-500 mt-1"><i class="fa-solid fa-tag"></i> ${o.productName}</div>
-                            </td>
-                            <td class="p-4">
-                                <div class="font-medium text-gray-800">${o.customerName}</div>
-                                <div class="text-xs text-gray-500"><i class="fa-solid fa-phone"></i> ${o.phone}</div>
-                            </td>
-                            <td class="p-4 font-bold text-gray-800">฿${o.total.toLocaleString()}</td>
-                            <td class="p-4">${statusHtml}</td>
-                            <td class="p-4 text-center space-x-2 flex justify-center">
-                                <button onclick="printLabel('${id}')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg tooltip" title="ปริ้นใบปะหน้า"><i class="fa-solid fa-print"></i></button>
-                                <button onclick="copySummary('${id}')" class="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-lg tooltip" title="คัดลอกสรุปยอด"><i class="fa-solid fa-copy"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-
-        // --- 6. ฟีเจอร์พิเศษ (Print & Copy Summary) ---
-        function printLabel(id) {
-            const o = ordersData[id];
-            document.getElementById('print-name').innerText = o.customerName;
-            document.getElementById('print-phone').innerText = o.phone;
-            document.getElementById('print-address').innerText = o.address;
-            document.getElementById('print-order-id').innerText = `Ref: #${id}`;
-            
-            document.getElementById('print-area').classList.remove('hidden');
-            window.print();
-            document.getElementById('print-area').classList.add('hidden');
-        }
-
-        function copySummary(id) {
-            const o = ordersData[id];
-            const text = `📦 สรุปคำสั่งซื้อ\nรหัส: ${id}\nชื่อ: ${o.customerName}\nสินค้า: ${o.productName}\nยอดรวม: ฿${o.total}\n\nสถานะ: ${o.status === 'pending'?'รอจัดส่ง':'จัดส่งแล้ว'}\nขอบคุณที่อุดหนุนครับ 🙏`;
-            navigator.clipboard.writeText(text).then(() => {
-                Swal.fire({icon: 'success', title: 'คัดลอกข้อความแล้ว', text: 'นำไปวางใน LINE ให้ลูกค้าได้เลย', showConfirmButton: false, timer: 1500});
-            });
-        }
-
-        // --- 7. Dashboard สรุปยอด ---
-        function updateDashboard() {
-            let totalSales = 0, pending = 0, shipped = 0, lowStock = 0;
-
-            Object.values(ordersData).forEach(o => {
-                if(o.status === 'shipped') { totalSales += Number(o.total); shipped++; }
-                if(o.status === 'pending') pending++;
-            });
-
-            Object.values(productsData).forEach(p => {
-                if(p.stock <= 5) lowStock++;
-            });
-
-            document.getElementById('stat-sales').innerText = `฿${totalSales.toLocaleString()}`;
-            document.getElementById('stat-pending').innerText = pending;
-            document.getElementById('stat-shipped').innerText = shipped;
-            document.getElementById('stat-lowstock').innerText = lowStock;
-        }
+        db.ref('store_data/orders').on('value', snap => {
+            document.getElementById('stat-orders').innerText = snap.numChildren();
+        });
     </script>
 </body>
 </html>
