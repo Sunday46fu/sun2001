@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบหลังบ้านผู้ดูแลระบบ (Admin)</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { box-sizing: border-box; font-family: 'sans-serif', Tahoma; }
+        body { background-color: #2c3e50; color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .admin-box { background: #34495e; padding: 30px; border-radius: 12px; max-width: 600px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-align: center; }
+        h1 { margin-top: 0; color: #ecf0f1; }
+        
+        .control-section { margin: 25px 0; padding: 15px; background: #1a252f; border-radius: 8px; }
+        .btn { border: none; padding: 12px 25px; font-size: 1.1rem; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 5px; transition: 0.2s; }
+        .btn-open { background-color: #2ecc71; color: white; }
+        .btn-close { background-color: #e74c3c; color: white; }
+        .btn-reset { background-color: #f39c12; color: white; font-size: 0.9rem; padding: 8px 15px; }
+        .btn:hover { opacity: 0.9; }
+
+        .result-table { width: 100%; margin-top: 20px; border-collapse: collapse; text-align: left; background: #2c3e50; border-radius: 6px; overflow: hidden; }
+        .result-table th, .result-table td { padding: 12px; border-bottom: 1px solid #34495e; }
+        .result-table th { background: #16a085; }
+        .current-status { font-size: 1.2rem; font-weight: bold; color: #f1c40f; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="admin-box">
+        <h1>🛠️ แผงควบคุมระบบโหวต (Admin)</h1>
+        
+        <div class="control-section">
+            <div class="current-status">สถานะปัจจุบัน: <span id="text-status">กำลังโหลด...</span></div>
+            <button class="btn btn-open" onclick="setStatus(true)">▶️ เปิดระบบโหวต</button>
+            <button class="btn btn-close" onclick="setStatus(false)">⏸️ ปิดระบบโหวต</button>
+        </div>
+
+        <h2>📊 สรุปผลคะแนนแบบเรียลไทม์</h2>
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>แบบเสื้อ</th>
+                    <th>คะแนนที่ได้</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>แบบที่ 1: มินิมอล</td><td><b id="res-shirt1">0</b> คะแนน</td></tr>
+                <tr><td>แบบที่ 2: สปอร์ต</td><td><b id="res-shirt2">0</b> คะแนน</td></tr>
+                <tr><td>แบบที่ 3: กราฟิก</td><td><b id="res-shirt3">0</b> คะแนน</td></tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 30px; text-align: right;">
+            <button class="btn btn-reset" onclick="resetVotes()">🔄 ล้างคะแนนโหวตทั้งหมดเป็น 0</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWUWpDnF5Yt7QQ0ULvsxSVJhV0ckGMfu8",
+            authDomain: "chatcharin-af5e4.firebaseapp.com",
+            databaseURL: "https://chatcharin-af5e4-default-rtdb.firebaseio.com",
+            projectId: "chatcharin-af5e4",
+            storageBucket: "chatcharin-af5e4.firebasestorage.app",
+            messagingSenderId: "631954642041",
+            appId: "1:631954642041:web:586447ace8ad055ca3f0a8",
+            measurementId: "G-2GNPMEF6E4"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // ฟังชันก์ดึงข้อมูลมาแสดงผลแบบ Realtime บนหน้าแอดมิน
+        db.ref().on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            
+            // แสดงสถานะระบบปัจจุบัน
+            const isOpen = data.systemStatus ? data.systemStatus.isOpen : false;
+            document.getElementById('text-status').innerText = isOpen ? "กำลังเปิดให้โหวต 🟢" : "ปิดระบบโหวตอยู่ 🔴";
+            document.getElementById('text-status').style.color = isOpen ? "#2ecc71" : "#e74c3c";
+
+            // แสดงคะแนนในตาราง
+            const votes = data.votes || {};
+            document.getElementById('res-shirt1').innerText = votes.shirt1 || 0;
+            document.getElementById('res-shirt2').innerText = votes.shirt2 || 0;
+            document.getElementById('res-shirt3').innerText = votes.shirt3 || 0;
+        });
+
+        // ฟังก์ชัน สั่งเปิด-ปิด โหวต
+        function setStatus(statusBoolean) {
+            db.ref('systemStatus').set({
+                isOpen: statusBoolean
+            }).then(() => {
+                alert("อัปเดตสถานะระบบเรียบร้อยแล้ว!");
+            });
+        }
+
+        // ฟังก์ชัน รีเซ็ตเซ็ตคะแนนทั้งหมดให้เป็น 0
+        function resetVotes() {
+            if(confirm("คุณแน่ใจใช่ไหมที่จะล้างคะแนนโหวตทั้งหมดให้กลับเป็น 0?")) {
+                db.ref('votes').set({
+                    shirt1: 0,
+                    shirt2: 0,
+                    shirt3: 0
+                }).then(() => {
+                    alert("ล้างคะแนนโหวตเริ่มต้นใหม่สำเร็จ!");
+                });
+            }
+        }
+    </script>
+</body>
+</html>
