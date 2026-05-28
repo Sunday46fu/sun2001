@@ -1,1 +1,97 @@
-14
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบโหวตลายเสื้อโรงเรียนออนไลน์</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: #333; margin-bottom: 30px; text-align: center; }
+        
+        .container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; max-width: 1200px; width: 100%; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; width: 300px; text-align: center; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        
+        .shirt-img { width: 100%; height: 250px; object-fit: cover; border-radius: 8px; background-color: #eee; }
+        .shirt-title { font-size: 1.2rem; font-weight: bold; margin: 15px 0 5px 0; color: #2c3e50; }
+        .vote-count { font-size: 1.5rem; color: #e74c3c; font-weight: bold; margin-bottom: 15px; }
+        
+        .vote-btn { background-color: #3498db; color: white; border: none; padding: 10px 20px; font-size: 1rem; border-radius: 6px; cursor: pointer; width: 100%; transition: background 0.2s; }
+        .vote-btn:hover { background-color: #2980b9; }
+        .vote-btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+    <h1>👕 โหวตลายเสื้อโรงเรียนประจำปี 👕</h1>
+
+    <div class="container">
+        <div class="card">
+            <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400" alt="ลายที่ 1" class="shirt-img">
+            <div class="shirt-title">แบบที่ 1: สไตล์มินิมอล</div>
+            <div class="vote-count"><span id="count-shirt1">0</span> คะแนน</div>
+            <button class="vote-btn" onclick="vote('shirt1')">👍 โหวตแบบนี้</button>
+        </div>
+
+        <div class="card">
+            <img src="https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400" alt="ลายที่ 2" class="shirt-img">
+            <div class="shirt-title">แบบที่ 2: สปอร์ตดุดัน</div>
+            <div class="vote-count"><span id="count-shirt2">0</span> คะแนน</div>
+            <button class="vote-btn" onclick="vote('shirt2')">👍 โหวตแบบนี้</button>
+        </div>
+
+        <div class="card">
+            <img src="https://images.unsplash.com/photo-1562157873-818bc0726f68?w=400" alt="ลายที่ 3" class="shirt-img">
+            <div class="shirt-title">แบบที่ 3: โมเดิร์นกราฟิก</div>
+            <div class="vote-count"><span id="count-shirt3">0</span> คะแนน</div>
+            <button class="vote-btn" onclick="vote('shirt3')">👍 โหวตแบบนี้</button>
+        </div>
+    </div>
+
+    <script>
+        // Config ของคุณที่ให้มา
+        const firebaseConfig = {
+            apiKey: "AIzaSyAWUWpDnF5Yt7QQ0ULvsxSVJhV0ckGMfu8",
+            authDomain: "chatcharin-af5e4.firebaseapp.com",
+            databaseURL: "https://chatcharin-af5e4-default-rtdb.firebaseio.com",
+            projectId: "chatcharin-af5e4",
+            storageBucket: "chatcharin-af5e4.firebasestorage.app",
+            messagingSenderId: "631954642041",
+            appId: "1:631954642041:web:586447ace8ad055ca3f0a8",
+            measurementId: "G-2GNPMEF6E4"
+        };
+        
+        // เริ่มต้นใช้งาน Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 1. ดึงคะแนนแบบ Realtime มาแสดงผล (เมื่อฐานข้อมูลเปลี่ยน หน้าจอจะเปลี่ยนทันที)
+        db.ref('votes').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('count-shirt1').innerText = data.shirt1 || 0;
+                document.getElementById('count-shirt2').innerText = data.shirt2 || 0;
+                document.getElementById('count-shirt3').innerText = data.shirt3 || 0;
+            }
+        });
+
+        // 2. ฟังก์ชันเมื่อกดปุ่มโหวต (ใช้ transaction เพื่อป้องกันคะแนนชนกันกรณีโหวตพร้อมกัน)
+        function vote(shirtId) {
+            const voteRef = db.ref('votes/' + shirtId);
+            voteRef.transaction((currentVotes) => {
+                return (currentVotes || 0) + 1;
+            }, (error, committed, snapshot) => {
+                if (error) {
+                    alert("เกิดข้อผิดพลาดในการโหวต ลองใหม่อีกครั้ง");
+                } else if (committed) {
+                    alert("บันทึกคะแนนโหวตของคุณเรียบร้อยแล้ว!");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
